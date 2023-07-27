@@ -24,9 +24,16 @@ rc('text',usetex=True)
 
 #1-d Burgers' equation
 
+'''
+Equation parameters
+'''
+
 def nu(x,nu1,da1): #Equation parameter
     return nu1*np.ones(da1)
 
+'''
+Neural operator evaluation
+'''
 def sig(x): #Activation function
     return 1.0/(1.0+np.exp(-x))
 def shallowNN(x,W1,b1,nu1,da1):# Initial shallow NN
@@ -41,19 +48,27 @@ def FT(kmax1,Cv1,Sv1,vt1r,vt1i,dv1):#Fourier transform
             fr[i,j]=np.sum(vt1r[i]*Cv1[:,j]+vt1i[i]*Sv1[:,j])
             fi[i,j]=np.sum(vt1i[i]*Cv1[:,j]-vt1r[i]*Sv1[:,j])
     return fr,fi
-def InverseFT(x1,kmax1,ks1,f1r,f1i,Nx1,dv1):#Inverse Fourier transform
+def InverseFT(x,kmax1,ks1,f1r,f1i,Nx1,dv1):#Inverse Fourier transform
 #pointwise evaluation
 #f1r and f1i are of dimensions dv x kmax
     vr,vi=np.zeros(dv1),np.zeros(dv1)
-    argv=2*np.pi*x1*ks1/Lx
+    argv=2*np.pi*x*ks1/Lx
     Cv1=np.cos(argv)
     Sv1=np.sin(argv)
     for i in range(dv1):
         vr[i]=np.sum(f1r[i]*Cv1-f1i[i]*Sv1)
         vi[i]=np.sum(f1i[i]*Cv1+f1r[i]*Sv1)
     return vr,vi
+def FourierLayer(x,xs1,Nx1,Cv1,Sv1,vt1,dv1,W1,Rr1,Ri1,kmax1): 
+#Rr and Ri are of sizes kmax x dv x dv
+    vti=np.zeros(np.shape(vt1))
+    fr,fi=FT(kmax1,Cv1,Sv1,vt1,vti,dv1)
+    RF=np.zeros((dv1,kmax1))
+    for i in range(kmax1):
+        for j in range(dv1):
+            RF[j,i]=np.sum(Rr1[i,j,:]*fr[:,i]-Ri1[i,j,:]*fi[:,i])
     
-#def FourierLayer(x,xs1,Nx1,vt1,W1,R1,kmax1): 
+    
     
     
    
