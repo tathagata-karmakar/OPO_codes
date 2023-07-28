@@ -12,6 +12,7 @@ Created on Wed Jul 26 22:02:54 2023
 
 import os
 import qutip as qt
+import time
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
@@ -28,8 +29,8 @@ rc('text',usetex=True)
 Equation parameters
 '''
 
-def nu(x,nu1,da1,kmax1): #Equation parameter
-    return nu1*np.ones((da1,kmax1)) #dimension da x kmax
+def nu(nu1,da1,kmax1): #Equation parameter
+    return nu1*np.ones((da1,kmax1)) #dimension da x kmax x NT
 
 '''
 Neural operator evaluation
@@ -65,8 +66,9 @@ def InverseFT(x,kmax1,ks1,f1r,f1i,Nx1,dv1):#Inverse Fourier transform
 
 def shallowNN(x,W1,b1,nu1,da1,kmax1,dv1):# Initial shallow NN
 # W1 is a matrix with dimension dvxda, b1 is a vector of dimension dv  
-    nuv=nu(x,nu1,da1) #dimension da x kmax
-    b1v=np.tile(b1,(dv1,kmax1)).transpose()
+    nuv=nu(nu1,da1,kmax1) #dimension da x kmax x NT1
+    b1v=np.reshape(np.tile(b1,kmax1),(kmax,dv)).T
+    print (np.shape(b1v))
     return sig(np.matmul(W1,nuv)+b1v) #dimension dv x kmax
 def ProjectNN(vt1,W1,b1): #NN to project the outputs to Fourier layers to the solution
 #vt1 is of dimension dv x kmax
@@ -90,9 +92,9 @@ def FourierLayer(vt1,dv1,W1,kmax1,kappa1):
 #kappa1 is of size dv x dv x kmax
     Rtensor=np.swapaxes(np.fft.fft(kappa1,axis=-1),1,2) #Rtensor is of size dv x kmax x dv
     f=FastFT(vt1) #shape dv x kmax
-    RF=np.zeros(dv1,kmax1,dtype=complex)
+    RF=np.zeros((dv1,kmax1),dtype=complex)
     for i in range(kmax1):
-        RF[:,i]=np.dot(Rtensor,f)
+        RF[:,i]=np.dot(Rtensor[:,i,:],f[:,i])
     kernelpart=np.real(InvFastFT(RF))
     sig_arg=np.matmul(W1,vt1)+kernelpart 
     return sig(sig_arg) #dimension dv x kmax
@@ -104,7 +106,7 @@ def OutputNN(W0,b0,W1,kappa1,W2,kappa2,W3,kappa3,W4,kappa4,Wf,bf,xs1,nu1,da1,kma
 #W3 is of dimension dv x dv, kappa3 is of dimension dv x dv x kmax
 #W4 is of dimension dv x dv, kappa4 is of dimension dv x dv x kmax   
 #Wf is of dimension 1 x dv, bf is a scalar
-    v0=shallowNN(xs1,W0,b0,nu1,kmax1,dv1)
+    v0=shallowNN(xs1,W0,b0,nu1,da1,kmax1,dv1)
     v1=FourierLayer(v0,dv1,W1,kmax1,kappa1)
     v2=FourierLayer(v1,dv1,W2,kmax1,kappa2)
     v3=FourierLayer(v2,dv1,W3,kmax1,kappa3)
@@ -114,13 +116,33 @@ def OutputNN(W0,b0,W1,kappa1,W2,kappa2,W3,kappa3,W4,kappa4,Wf,bf,xs1,nu1,da1,kma
 
 
 
-dv=16
+dv=64
 da=1
 kmax=16
+NT=20
 xs=np.linspace(0.01,0.99,kmax)
+ts=np.linspace(0,1,NT)
 Lx=xs[1]-xs[0]
 ks=np.arange(0,kmax)
 Nvars=4*(dv**2)*(1+kmax)+dv*(da+2)+1
+nuval=0.001
+W0=np.random.rand(dv,da)
+b0=np.random.rand(dv)
+W1=np.random.rand(dv,dv)
+kappa1=np.random.rand(dv,dv,kmax)
+W2=np.random.rand(dv,dv)
+kappa2=np.random.rand(dv,dv,kmax)
+W3=np.random.rand(dv,dv)
+kappa3=np.random.rand(dv,dv,kmax)
+W4=np.random.rand(dv,dv)
+kappa4=np.random.rand(dv,dv,kmax)
+Wf=np.random.rand(1,dv)
+bf=np.random.rand(1)
+
+tstart=time.time()
+u=OutputNN(W0,b0,W1,kappa1,W2,kappa2,W3,kappa3,W4,kappa4,Wf,bf,xs,nuval,da,kmax,dv)
+tfinish=time.time()
+trun=tfinish-tstart
 
 
 '''
