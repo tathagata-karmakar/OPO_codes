@@ -28,14 +28,15 @@ rc('text',usetex=True)
 Equation parameters
 '''
 
-def nu(x,nu1,da1): #Equation parameter
-    return nu1*np.ones(da1) #dimension da
+def nu(x,nu1,da1,kmax1): #Equation parameter
+    return nu1*np.ones((da1,kmax1)) #dimension da x kmax
 
 '''
 Neural operator evaluation
 '''
 def sig(x): #Activation function
     return 1.0/(1.0+np.exp(-x)) #dimension same as input
+'''
 def shallowNN(x,W1,b1,nu1,da1):# Initial shallow NN
 # W1 is a matrix with dimension dvxda, b1 is a vector of dimension dv
     nuv=nu(x,nu1,da1)
@@ -60,13 +61,33 @@ def InverseFT(x,kmax1,ks1,f1r,f1i,Nx1,dv1):#Inverse Fourier transform
         vr[i]=np.sum(f1r[i]*Cv1-f1i[i]*Sv1)
         vi[i]=np.sum(f1i[i]*Cv1+f1r[i]*Sv1)
     return vr,vi #Dimension dv
-def FourierLayer(x,xs1,vt1x,Nx1,Cv1,Sv1,vt1,dv1,W1,Rr1,Ri1,ks1,kmax1): 
+'''
+
+def shallowNN(x,W1,b1,nu1,da1,kmax1,dv1):# Initial shallow NN
+# W1 is a matrix with dimension dvxda, b1 is a vector of dimension dv  
+    nuv=nu(x,nu1,da1) #dimension da x kmax
+    b1v=np.tile(b1,(dv1,kmax1)).transpose()
+    return sig(np.matmul(W1,nuv)+b1v) #dimension dv x kmax
+
+def FastFT(vt1):#Fast Fourier transform
+#vt1 is of dimensions dv x kmax
+    f=np.fft.fft(vt1,axis=-1)
+    return f #each with dimensions dv x kmax
+def InvFastFT(Fvt1):#Inverse Fast Fourier transform
+#pointwise evaluation
+#Fvt1 is of dimensions dv x kmax
+    f=np.fft.ifft(Fvt1,axis=-1)
+    return f
+
+def FourierLayer(x,xs1,vt1x,Nx1,Cv1,Sv1,vt1,dv1,W1,Rr1,Ri1,ks1,kmax1,kappa1): 
 #Rr and Ri are of sizes kmax x dv x dv
 #W1 is of size dv x dv
-#vt1x is of size dv
-    Rr1=Rr1+np.fliC
-    vti=np.zeros(np.shape(vt1))
-    fr,fi=FT(kmax1,Cv1,Sv1,vt1,vti,dv1)
+#vt1 is of size dv x kmax
+#kappa1 is of size dv x dv x kmax
+    Rtensor=np.fft.fft(kappa1,axis=-1) #Rtensor is of size dv x dv x kmax
+    #Rr1=Rr1+np.fliC
+    #vti=np.zeros(np.shape(vt1))
+    f=FastFT(vt1) #shape dv x kmax
     RFr=np.zeros((dv1,kmax1))
     RFi=np.zeros((dv1,kmax1))
     for i in range(kmax1):
@@ -82,10 +103,11 @@ def FourierLayer(x,xs1,vt1x,Nx1,Cv1,Sv1,vt1,dv1,W1,Rr1,Ri1,ks1,kmax1):
     
     
    
-Nx=10
+
 dv=64
 da=1
 kmax=16
+Nx=10
 xs=np.linspace(0.01,0.99,Nx)
 Lx=xs[1]-xs[0]
 ks=np.arange(0,kmax)
