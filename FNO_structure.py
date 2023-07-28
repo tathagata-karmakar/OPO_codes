@@ -67,8 +67,8 @@ def InverseFT(x,kmax1,ks1,f1r,f1i,Nx1,dv1):#Inverse Fourier transform
 def shallowNN(x,W1,b1,nu1,da1,kmax1,dv1):# Initial shallow NN
 # W1 is a matrix with dimension dvxda, b1 is a vector of dimension dv  
     nuv=nu(nu1,da1,kmax1) #dimension da x kmax x NT1
-    b1v=np.reshape(np.tile(b1,kmax1),(kmax,dv)).T
-    print (np.shape(b1v))
+    b1v=np.reshape(np.tile(b1,kmax1),(kmax1,dv1)).T
+    #print (np.shape(b1v))
     return sig(np.matmul(W1,nuv)+b1v) #dimension dv x kmax
 def ProjectNN(vt1,W1,b1): #NN to project the outputs to Fourier layers to the solution
 #vt1 is of dimension dv x kmax
@@ -114,35 +114,6 @@ def OutputNN(W0,b0,W1,kappa1,W2,kappa2,W3,kappa3,W4,kappa4,Wf,bf,xs1,nu1,da1,kma
     u=ProjectNN(v4,Wf,bf)
     return u
 
-
-
-dv=64
-da=1
-kmax=16
-NT=20
-xs=np.linspace(0.01,0.99,kmax)
-ts=np.linspace(0,1,NT)
-Lx=xs[1]-xs[0]
-ks=np.arange(0,kmax)
-Nvars=4*(dv**2)*(1+kmax)+dv*(da+2)+1
-nuval=0.001
-W0=np.random.rand(dv,da)
-b0=np.random.rand(dv)
-W1=np.random.rand(dv,dv)
-kappa1=np.random.rand(dv,dv,kmax)
-W2=np.random.rand(dv,dv)
-kappa2=np.random.rand(dv,dv,kmax)
-W3=np.random.rand(dv,dv)
-kappa3=np.random.rand(dv,dv,kmax)
-W4=np.random.rand(dv,dv)
-kappa4=np.random.rand(dv,dv,kmax)
-Wf=np.random.rand(1,dv)
-bf=np.random.rand(1)
-
-tstart=time.time()
-u=OutputNN(W0,b0,W1,kappa1,W2,kappa2,W3,kappa3,W4,kappa4,Wf,bf,xs,nuval,da,kmax,dv)
-tfinish=time.time()
-trun=tfinish-tstart
 
 
 '''

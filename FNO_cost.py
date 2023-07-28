@@ -17,9 +17,38 @@ import numpy as np
 from scipy.integrate import simps as intg
 from matplotlib import rc
 from pylab import rcParams
+from FNO_structure import *
 os.environ["PATH"] += os.pathsep + '/Library/TeX/texbin'
 rc('text',usetex=True)
 
 
+dv=64
+da=1
+kmax=16
+NT=20
+xs=np.linspace(0.01,0.99,kmax)
+ts=np.linspace(0,1,NT)
+Lx=xs[1]-xs[0]
+ks=np.arange(0,kmax)
+Nvars=4*(dv**2)*(1+kmax)+dv*(da+2)+1
+nuval=0.001
+W0=np.random.rand(dv,da)
+b0=np.random.rand(dv)
+W1=np.random.rand(dv,dv)
+kappa1=np.random.rand(dv,dv,kmax)
+W2=np.random.rand(dv,dv)
+kappa2=np.random.rand(dv,dv,kmax)
+W3=np.random.rand(dv,dv)
+kappa3=np.random.rand(dv,dv,kmax)
+W4=np.random.rand(dv,dv)
+kappa4=np.random.rand(dv,dv,kmax)
+Wf=np.random.rand(1,dv)
+bf=np.random.rand(1)
 
+tstart=time.time()
+u=OutputNN(W0,b0,W1,kappa1,W2,kappa2,W3,kappa3,W4,kappa4,Wf,bf,xs,nuval,da,kmax,dv)
+tfinish=time.time()
+trun=tfinish-tstart
+
+print(trun)
 
