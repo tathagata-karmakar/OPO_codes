@@ -68,6 +68,11 @@ def shallowNN(x,W1,b1,nu1,da1,kmax1,dv1):# Initial shallow NN
     nuv=nu(x,nu1,da1) #dimension da x kmax
     b1v=np.tile(b1,(dv1,kmax1)).transpose()
     return sig(np.matmul(W1,nuv)+b1v) #dimension dv x kmax
+def ProjectNN(vt1,W1,b1,dv1): #NN to project the outputs to Fourier layers to the solution
+#vt1 is of dimension dv x kmax
+#W1 is of size 1 x dv (for one dependent variable) 
+#b1 is a constant
+    return np.matmul(W1,vt1)+b1 #shape 1 x kmax
 
 def FastFT(vt1):#Fast Fourier transform
 #vt1 is of dimensions dv x kmax
@@ -79,36 +84,27 @@ def InvFastFT(Fvt1):#Inverse Fast Fourier transform
     f=np.fft.ifft(Fvt1,axis=-1)
     return f
 
-def FourierLayer(x,xs1,vt1x,Nx1,Cv1,Sv1,vt1,dv1,W1,Rr1,Ri1,ks1,kmax1,kappa1): 
-#Rr and Ri are of sizes kmax x dv x dv
+def FourierLayer(vt1,dv1,W1,kmax1,kappa1): 
 #W1 is of size dv x dv
 #vt1 is of size dv x kmax
 #kappa1 is of size dv x dv x kmax
-    Rtensor=np.fft.fft(kappa1,axis=-1) #Rtensor is of size dv x dv x kmax
-    #Rr1=Rr1+np.fliC
-    #vti=np.zeros(np.shape(vt1))
+    Rtensor=np.swapaxes(np.fft.fft(kappa1,axis=-1),1,2) #Rtensor is of size dv x kmax x dv
     f=FastFT(vt1) #shape dv x kmax
-    RFr=np.zeros((dv1,kmax1))
-    RFi=np.zeros((dv1,kmax1))
+    RF=np.zeros(dv1,kmax1,dtype=complex)
     for i in range(kmax1):
-        for j in range(dv1):
-            RFr[j,i]=np.sum(Rr1[i,j,:]*fr[:,i]-Ri1[i,j,:]*fi[:,i])
-            RFi[j,i]=np.sum(Ri1[i,j,:]*fr[:,i]+Rr1[i,j,:]*fi[:,i])
-    vr,vi=InverseFT(x,kmax1,ks1,RFr,RFi,Nx1,dv1)
-    sig_arg=vr+np.matmul(W1,vt1x)
-    return sig(sig_arg)
-    
-    
-    
-    
-    
-   
+        RF[:,i]=np.dot(Rtensor,f)
+    kernelpart=np.real(InvFastFT(RF))
+    sig_arg=np.matmul(W1,vt1)+kernelpart 
+    return sig(sig_arg) #dimension dv x kmax
+
+
+
+
 
 dv=64
 da=1
 kmax=16
-Nx=10
-xs=np.linspace(0.01,0.99,Nx)
+xs=np.linspace(0.01,0.99,kmax)
 Lx=xs[1]-xs[0]
 ks=np.arange(0,kmax)
 xvs,kvs=np.meshgrid(xs,ks,indexing='ij')
