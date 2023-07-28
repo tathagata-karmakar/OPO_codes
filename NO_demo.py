@@ -68,7 +68,7 @@ def shallowNN(x,W1,b1,nu1,da1,kmax1,dv1):# Initial shallow NN
     nuv=nu(x,nu1,da1) #dimension da x kmax
     b1v=np.tile(b1,(dv1,kmax1)).transpose()
     return sig(np.matmul(W1,nuv)+b1v) #dimension dv x kmax
-def ProjectNN(vt1,W1,b1,dv1): #NN to project the outputs to Fourier layers to the solution
+def ProjectNN(vt1,W1,b1): #NN to project the outputs to Fourier layers to the solution
 #vt1 is of dimension dv x kmax
 #W1 is of size 1 x dv (for one dependent variable) 
 #b1 is a constant
@@ -97,19 +97,38 @@ def FourierLayer(vt1,dv1,W1,kmax1,kappa1):
     sig_arg=np.matmul(W1,vt1)+kernelpart 
     return sig(sig_arg) #dimension dv x kmax
 
+def OutputNN(W0,b0,W1,kappa1,W2,kappa2,W3,kappa3,W4,kappa4,Wf,bf,xs1,nu1,da1,kmax1,dv1): #NN output given input 
+#W0 is of dimension dv x da, b0 is a vector of dimension dv
+#W1 is of dimension dv x dv, kappa1 is of dimension dv x dv x kmax
+#W2 is of dimension dv x dv, kappa2 is of dimension dv x dv x kmax
+#W3 is of dimension dv x dv, kappa3 is of dimension dv x dv x kmax
+#W4 is of dimension dv x dv, kappa4 is of dimension dv x dv x kmax   
+#Wf is of dimension 1 x dv, bf is a scalar
+    v0=shallowNN(xs1,W0,b0,nu1,kmax1,dv1)
+    v1=FourierLayer(v0,dv1,W1,kmax1,kappa1)
+    v2=FourierLayer(v1,dv1,W2,kmax1,kappa2)
+    v3=FourierLayer(v2,dv1,W3,kmax1,kappa3)
+    v4=FourierLayer(v3,dv1,W4,kmax1,kappa4)
+    u=ProjectNN(v4,Wf,bf)
+    return u
 
 
 
-
-dv=64
+dv=16
 da=1
 kmax=16
 xs=np.linspace(0.01,0.99,kmax)
 Lx=xs[1]-xs[0]
 ks=np.arange(0,kmax)
+Nvars=4*(dv**2)*(1+kmax)+dv*(da+2)+1
+
+
+'''
 xvs,kvs=np.meshgrid(xs,ks,indexing='ij')
+
 argv=2*np.pi*xvs*kvs/Lx
 Cvs=np.cos(argv)
 Svs=np.sin(argv)
+'''
 
 
