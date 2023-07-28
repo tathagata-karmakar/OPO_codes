@@ -41,7 +41,7 @@ def shallowNN(x,W1,b1,nu1,da1):# Initial shallow NN
     nuv=nu(x,nu1,da1)
     return sig(np.matmul(W1,nuv)+b1)
 def FT(kmax1,Cv1,Sv1,vt1r,vt1i,dv1):#Fourier transform
-#vt1r and vt1i are of dimensions dv x Nx
+#vt1r and vt1i are of dimensions dv x kmax
     fr,fi=np.zeros(dv1,kmax1),np.zeros(dv1,kmax1)
     for j in range(kmax1):
         for i in range(dv1):
@@ -61,18 +61,22 @@ def InverseFT(x,kmax1,ks1,f1r,f1i,Nx1,dv1):#Inverse Fourier transform
     return vr,vi
 def FourierLayer(x,xs1,Nx1,Cv1,Sv1,vt1,dv1,W1,Rr1,Ri1,kmax1): 
 #Rr and Ri are of sizes kmax x dv x dv
+#W1 
+    Rr1=Rr1+np.fliC
     vti=np.zeros(np.shape(vt1))
     fr,fi=FT(kmax1,Cv1,Sv1,vt1,vti,dv1)
     RF=np.zeros((dv1,kmax1))
+    #RF=np.zeros((dv1,kmax1))
     for i in range(kmax1):
         for j in range(dv1):
             RF[j,i]=np.sum(Rr1[i,j,:]*fr[:,i]-Ri1[i,j,:]*fi[:,i])
+            #RFi[j,i]=np.sum(Ri1[i,j,:]*fr[:,i]+Rr1[i,j,:]*fi[:,i])
+    
     
     
     
     
    
-
 Nx=10
 dv=64
 da=1
