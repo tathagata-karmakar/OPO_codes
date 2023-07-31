@@ -22,12 +22,27 @@ rc('text',usetex=True)
 import jax.numpy as jnp
 from jax import grad, jit, vmap
 from jax import random
+from jax import lax
 from jax import device_put
+from jax import make_jaxpr
+from functools import partial
 
-x_np=np.linspace(0,10,1000)
-y_np=2*np.sin(x_np)*np.cos(x_np)
-plt.plot(x_np,y_np)
 
-x_jnp=jnp.linspace(0,10,1000)
-y_jnp=2*jnp.sin(x_jnp)*jnp.cos(x_jnp)
-plt.plot(x_jnp,y_jnp)
+
+array=jnp.arange(10)
+print(lax.fori_loop(0, 10, lambda i,x: x+array[i],0))
+iterator=iter(range(10))
+print(lax.fori_loop(0, 10, lambda i,x: x+next(iterator),0))
+
+def func11(arr,extra):
+    ones=jnp.ones(arr.shape)
+    def body(carry,aelems):
+        ae1,ae2=aelems
+        return (carry+ae1*ae2+extra,carry)
+    return lax.scan(body,0.,(arr,ones))
+
+make_jaxpr(func11)(jnp.arange(16),5.)
+array_operand = jnp.array([0.])
+lax.cond(True, lambda x:x+1, lambda x:x-1,array_operand)
+iter_operand = iter(range(10))
+
