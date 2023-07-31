@@ -112,7 +112,17 @@ def OutputNN(W0,b0,W1,kappa1,W2,kappa2,W3,kappa3,W4,kappa4,Wf,bf,xs1,nu1,da1,kma
     v3=FourierLayer(v2,dv1,W3,kmax1,kappa3)
     v4=FourierLayer(v3,dv1,W4,kmax1,kappa4)
     u=ProjectNN(v4,Wf,bf)
-    return u #dimension kmax
+    return u[0] #dimension kmax
+
+def costF(W0,b0,W1,kappa1,W2,kappa2,W3,kappa3,W4,kappa4,Wf,bf,xs1,nu1,da1,kmax1,dv1,dx1,al1): 
+    #Cost function calculations for a single parameter value
+    u=OutputNN(W0,b0,W1,kappa1,W2,kappa2,W3,kappa3,W4,kappa4,Wf,bf,xs1,nu1,da1,kmax1,dv1)
+    u1=OutputNN(W0,b0,W1,kappa1,W2,kappa2,W3,kappa3,W4,kappa4,Wf,bf,xs1+dx1,nu1,da1,kmax1,dv1)
+    du=(u1-u)/dx1
+    cf=intg(du**2,xs1)+al1*u[0]**2
+    #print (np.shape(u[0]),u[0])
+    return cf
+
 
 
 
