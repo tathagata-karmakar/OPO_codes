@@ -21,11 +21,17 @@ from FNO_structure import *
 os.environ["PATH"] += os.pathsep + '/Library/TeX/texbin'
 rc('text',usetex=True)
 
+def costF(W0,b0,W1,kappa1,W2,kappa2,W3,kappa3,W4,kappa4,Wf,bf,xs1,nu1,da1,kmax1,dv1,dx1,al1): #Cost function calculations
+    u=OutputNN(W0,b0,W1,kappa1,W2,kappa2,W3,kappa3,W4,kappa4,Wf,bf,xs1,nu1,da1,kmax1,dv1)
+    u1=OutputNN(W0,b0,W1,kappa1,W2,kappa2,W3,kappa3,W4,kappa4,Wf,bf,xs1+dx1,nu1,da1,kmax1,dv1)
+    du=(u1-u)/dx1
+    return intg(du**2,xs1)+al1*u[0]**2
 
 dv=64
 da=1
 kmax=16
 NT=20
+dx=0.01
 xs=np.linspace(0.01,0.99,kmax)
 ts=np.linspace(0,1,NT)
 Lx=xs[1]-xs[0]
@@ -46,7 +52,8 @@ Wf=np.random.rand(1,dv)
 bf=np.random.rand(1)
 
 tstart=time.time()
-u=OutputNN(W0,b0,W1,kappa1,W2,kappa2,W3,kappa3,W4,kappa4,Wf,bf,xs,nuval,da,kmax,dv)
+#u=OutputNN(W0,b0,W1,kappa1,W2,kappa2,W3,kappa3,W4,kappa4,Wf,bf,xs,nuval,da,kmax,dv)
+u=costF(W0,b0,W1,kappa1,W2,kappa2,W3,kappa3,W4,kappa4,Wf,bf,xs,nuval,da,kmax,dv,dx,0.1)
 tfinish=time.time()
 trun=tfinish-tstart
 

@@ -112,7 +112,7 @@ def OutputNN(W0,b0,W1,kappa1,W2,kappa2,W3,kappa3,W4,kappa4,Wf,bf,xs1,nu1,da1,kma
     v3=FourierLayer(v2,dv1,W3,kmax1,kappa3)
     v4=FourierLayer(v3,dv1,W4,kmax1,kappa4)
     u=ProjectNN(v4,Wf,bf)
-    return u
+    return u #dimension kmax
 
 
 
