@@ -28,11 +28,18 @@ from jax import device_put
 from jax import make_jaxpr
 from functools import partial
 
-def selu(x,alpha=1.67,lambda_=1.05):
-    return lambda_*jnp.where(x>0,x,alpha*jnp.exp(x))
+value_fn=lambda theta,state:jnp.dot(theta,state)
+theta = jnp.array([0.1,-0.1,0.])
 
-selu_jit=jit(selu)
+s_tm1=jnp.array([1.,2.,-1.])
+r_t=jnp.array(1.)
+s_t=jnp.array([2.,1.,0.])
 
-x=jnp.arange(1000000)
-selu_jit(x).block_until_ready()
-%timeit selu_jit(x).block_until_ready()
+def td_loss(theta,s_tm1,r_t,s_t):
+    v_tm1=value_fn(theta,s_tm1)
+    target=r_t+value_fn(theta,s_t)
+    return (jax.lax.stop_gradient(target)-v_tm1)**2
+
+td_update=jax.grad(td_loss)
+delta_theta=td_update(theta,s_tm1,r_t,s_t)
+
