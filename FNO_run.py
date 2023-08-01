@@ -48,7 +48,8 @@ bf=np.random.rand(1)
 
 tstart=time.time()
 #u=OutputNN(W0,b0,W1,kappa1,W2,kappa2,W3,kappa3,W4,kappa4,Wf,bf,xs,nuval,da,kmax,dv)
-u=costF(W0,b0,W1,kappa1,W2,kappa2,W3,kappa3,W4,kappa4,Wf,bf,xs,nuval,da,kmax,dv,dx,0.1)
+lmbds=np.linspace(0.1,0.9,20)
+u=TotalCost(W0,b0,W1,kappa1,W2,kappa2,W3,kappa3,W4,kappa4,Wf,bf,xs,nuval,da,kmax,dv,dx,lmbds)
 tfinish=time.time()
 trun=tfinish-tstart
 

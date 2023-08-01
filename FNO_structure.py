@@ -119,10 +119,19 @@ def costF(W0,b0,W1,kappa1,W2,kappa2,W3,kappa3,W4,kappa4,Wf,bf,xs1,nu1,da1,kmax1,
     u=OutputNN(W0,b0,W1,kappa1,W2,kappa2,W3,kappa3,W4,kappa4,Wf,bf,xs1,nu1,da1,kmax1,dv1)
     u1=OutputNN(W0,b0,W1,kappa1,W2,kappa2,W3,kappa3,W4,kappa4,Wf,bf,xs1+dx1,nu1,da1,kmax1,dv1)
     du=(u1-u)/dx1
-    cf=intg(du**2,xs1)+al1*u[0]**2
+    cf=intg((du-al1*xs1)**2,xs1)+1.0*u[0]**2
     #print (np.shape(u[0]),u[0])
     return cf
 
+def TotalCost(W0,b0,W1,kappa1,W2,kappa2,W3,kappa3,W4,kappa4,Wf,bf,xs1,nu1,da1,kmax1,dv1,dx1,als1): 
+    #Total cost over all parameter values
+    l=len(als1)
+    cfs=0
+    for i in range(l):
+        cfs+=costF(W0,b0,W1,kappa1,W2,kappa2,W3,kappa3,W4,kappa4,Wf,bf,xs1,nu1,da1,kmax1,dv1,dx1,als1[i])
+    return cfs/l
+
+        
 
 
 
