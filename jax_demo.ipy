@@ -28,6 +28,7 @@ from jax import device_put
 from jax import make_jaxpr
 from functools import partial
 import collections 
+from typing import Iterable
 
 def init_mlp_params(layer_widths):
     params = []
@@ -67,4 +68,22 @@ class MyContainer:
         self.b=b
         self.c=c
 
+#tt=jax.tree_util.tree_leaves([MyContainer('Alice', 1 ,2, 3), MyContainer('Bob', 4 ,5, 6)])
+
+'''
+def flatten_MyContainer(container) -> tuple[Iterable[int],str]:
+    flat_contents = [container.a,container.b,container.c]
+    aux_data=container.name
+    return flat_contents,aux_data
+
+def unflatten_MyContainer(
+        aux_data:str, flat_contents: Iterable[int]) -> MyContainer:
+    return MyContainer(aux_data,*flat_contents)
+
+jax.tree_util.register_pytree_node(MyContainer,flatten_MyContainer,unflatten_MyContainer)
+'''
+
+
 tt=jax.tree_util.tree_leaves([MyContainer('Alice', 1 ,2, 3), MyContainer('Bob', 4 ,5, 6)])
+
+    
