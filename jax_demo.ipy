@@ -27,19 +27,32 @@ from jax import lax
 from jax import device_put
 from jax import make_jaxpr
 from functools import partial
+import collections 
 
-value_fn=lambda theta,state:jnp.dot(theta,state)
-theta = jnp.array([0.1,-0.1,0.])
+def init_mlp_params(layer_widths):
+    params = []
+    for n_in,n_out in zip(layer_widths[:-1],layer_widths[1:]):
+        params.append(dict(weights=np.random.normal(size=(n_in,n_out))*np.sqrt(2/n_in),biases=np.ones(shape=(n_out,))))
+    return params
 
-s_tm1=jnp.array([1.,2.,-1.])
-r_t=jnp.array(1.)
-s_t=jnp.array([2.,1.,0.])
+def forward(params,x):
+    *hidden,last=params
+    for layer in hidden:
+        x=jax.nn.relu(x @ layer['weights']+layer['biases'])
+    return x @ last['weights']+last['biases']
 
-def td_loss(theta,s_tm1,r_t,s_t):
-    v_tm1=value_fn(theta,s_tm1)
-    target=r_t+value_fn(theta,s_t)
-    return (jax.lax.stop_gradient(target)-v_tm1)**2
+def loss_fn(params,x,y):
+    return jnp.mean((forward(params,x)-y)**2)
 
-td_update=jax.grad(td_loss)
-delta_theta=td_update(theta,s_tm1,r_t,s_t)
+lrate=0.0001
 
+@jit
+def update(params, x,y):
+    grads=jax.grad(loss_fn)(params,x,y)
+    return jax.tree_map(lambda p,g:p-lrate*g,params, grads)
+
+
+ATuple = collections.namedtuple("ATuple",('name'))
+
+tree=[1,{'k1':2,'k2':(3,4)},ATuple('foo')]
+flattened,_=jax.tree_util.tree_flatten_with_path(tree)
