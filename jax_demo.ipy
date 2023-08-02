@@ -60,10 +60,6 @@ flattened,_=jax.tree_util.tree_flatten_with_path(tree)
 for key_path, value in flattened:
     print(f'Value of tree{jax.tree_util.keystr(key_path)}: {value}')
     
-<<<<<<< HEAD
-
-
-=======
 class MyContainer:
     
     def __init__(self,name: str, a: int, b: int, c:int):
@@ -116,6 +112,3 @@ for key_path, value in flattened:
 
 
 tt=jax.tree_util.tree_leaves([MyKeyPathContainer('Alice', 1 ,2, 3), MyKeyPathContainer('Bob', 4 ,5, 6)])
->>>>>>> parent of e15a8e4... Code in progress
-
-    
