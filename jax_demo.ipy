@@ -56,3 +56,15 @@ ATuple = collections.namedtuple("ATuple",('name'))
 
 tree=[1,{'k1':2,'k2':(3,4)},ATuple('foo')]
 flattened,_=jax.tree_util.tree_flatten_with_path(tree)
+for key_path, value in flattened:
+    print(f'Value of tree{jax.tree_util.keystr(key_path)}: {value}')
+    
+class MyContainer:
+    
+    def __init__(self,name: str, a: int, b: int, c:int):
+        self.name=name
+        self.a=a
+        self.b=b
+        self.c=c
+
+tt=jax.tree_util.tree_leaves([MyContainer('Alice', 1 ,2, 3), MyContainer('Bob', 4 ,5, 6)])
