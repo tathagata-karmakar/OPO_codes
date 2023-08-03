@@ -19,8 +19,21 @@ import numpy as np
 from scipy.integrate import simps as intg
 from matplotlib import rc
 from pylab import rcParams
+#from FNO_structure import *
 os.environ["PATH"] += os.pathsep + '/Library/TeX/texbin'
 rc('text',usetex=True)
+
+import jax
+import jax.numpy as jnp
+from jax import grad, jit, vmap
+from jax import random
+from jax import lax
+from jax import device_put
+from jax import make_jaxpr
+from jax.scipy.special import logsumexp
+from functools import partial
+import collections 
+from typing import Iterable
 
 
 #1-d Burgers' equation
