@@ -26,34 +26,27 @@ from jax import random
 from jax import lax
 from jax import device_put
 from jax import make_jaxpr
+from jax.scipy.special import logsumexp
 from functools import partial
 import collections 
 from typing import Iterable
 
-def init_mlp_params(layer_widths):
-    params = []
-    for n_in,n_out in zip(layer_widths[:-1],layer_widths[1:]):
-        params.append(dict(weights=np.random.normal(size=(n_in,n_out))*np.sqrt(2/n_in),biases=np.ones(shape=(n_out,))))
-    return params
 
-def forward(params,x):
-    *hidden,last=params
-    for layer in hidden:
-        x=jax.nn.relu(x @ layer['weights']+layer['biases'])
-    return x @ last['weights']+last['biases']
+def random_layer_params(m,n,key,scale=1e-2):
+    w_key,b_key=random.split(key)
+    return scale*random.normal(w_key,(n,m)),scale*random.normal(b_key,(n,))
+def init_network_params(sizes,key):
+    keys=random.split(key,len(sizes))
+    return [random_layer_params(m,n,k) for m,n,k in zip(sizes[:-1],sizes[1:],keys)]
 
-def loss_fn(params,x,y):
-    return jnp.mean((forward(params,x)-y)**2)
-
-lrate=0.0001
-
-@jit
-def update(params, x,y):
-    grads=jax.grad(loss_fn)(params,x,y)
-    return jax.tree_map(lambda p,g:p-lrate*g,params, grads)
+def relu(x):
+    return jnp.maximum(0,x)
 
 
-a_tree=[jnp.zeros((2,3)),jnp.zeros((3,4))]
+layer_sizes=[784,512,512,10]
+step_size=0.01
+num_epochs=10
+batch_size=128
+n_targets=10
+params=init_network_params(layer_sizes,random.PRNGKey(0))
 
-shapes=jax.tree_map(lambda x: x.shape, a_tree)
-ll=jax.tree_map(jnp.ones,shapes)
