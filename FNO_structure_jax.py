@@ -58,7 +58,7 @@ def relu(x): #Activation function
 def shallowNN(avs,W1,b1):# Initial shallow NN
 #avs is a matrix of dimension s1 x s2 x s3 x ... x sd x da
 # W1 is a matrix with dimension da x dv, b1 is a vector of dimension dv  
-    return relu(jnp.dot(avs,W1)+b1) #dimension dv x kmax
+    return relu(jnp.dot(avs,W1)+b1) #dimension s1 x s2 x s3 x ... x sd x dv
 
 def ProjectNN(vt1,W1,b1): #NN to project the outputs to Fourier layers to the solution
 #vt1 is of dimension s1 x s2 x s3 x ... x sd x dv
@@ -76,20 +76,18 @@ def InvFastFT(Fvt1):#Inverse Fast Fourier transform
     f=jnp.fft.ifftn(Fvt1,axis=(0,1))
     return f #dimension s1 x s2 x s3 x ... x sd x dv
 
-def FourierLayer(vt1,dv1,W1,kmax1,kappa1): 
+def FourierLayer(vt1,W1,kappa1): 
 #W1 is of size dv x dv
 #vt1 is of size  s1 x s2 x s3 x ... x sd x dv
-#kappa1 is of size dv x dv x kmax
-    Rtensor=np.swapaxes(np.fft.fft(kappa1,axis=-1),1,2) #Rtensor is of size dv x kmax x dv
-    f=FastFT(vt1) #shape dv x kmax
-    RF=np.zeros((dv1,kmax1),dtype=complex)
-    for i in range(kmax1):
-        RF[:,i]=np.dot(Rtensor[:,i,:],f[:,i])
-    kernelpart=np.real(InvFastFT(RF))
-    act_arg=np.matmul(W1,vt1)+kernelpart 
-    return relu(act_arg) #dimension dv x kmax
+#kappa1 is of size s1 x s2 x s3 x ... x sd x dv x dv
+    
+    ftemp=FastFT(vt1) 
+    RF = jnp.einsum('abc,abcd->abd',ftemp,kappa1) #For 2d Domain
+    kernelpart=jnp.real(InvFastFT(RF))
+    act_arg=jnp.dot(vt1,W1)+kernelpart 
+    return relu(act_arg) #dimension s1 x s2 x s3 x ... x sd x dv
 
-def OutputNN(params,xs1,nu1,da1,kmax1,dv1): #NN output given input 
+def OutputNN(params,): #NN output given input 
 #W0 is of dimension dv x da, b0 is a vector of dimension dv
 #W1 is of dimension dv x dv, kappa1 is of dimension dv x dv x kmax
 #W2 is of dimension dv x dv, kappa2 is of dimension dv x dv x kmax
