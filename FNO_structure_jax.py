@@ -38,14 +38,15 @@ from typing import Iterable
 
 #Input in d dimensions x1, x2, ... , xd
 #The dimensions have discretization s1, s2, ... , sd respectively  
+#s1 x s2 x s3 x .. x sd = n
 
 '''
 Equation parameters
 '''
 
-def nu(nu1,shape1): #shape1 is (s1, s2, ..., sd, da)
+def aMatrix(a1,shape1): #shape1 is (s1, s2, ..., sd, da)
     #Equation parameter
-    return nu1*np.ones(shape1) #dimension s1 x s2 x s3 x ... x sd x da
+    return a1*np.ones(shape1) #dimension s1 x s2 x s3 x ... x sd x da
 
 '''
 Neural operator evaluation
@@ -54,31 +55,30 @@ def relu(x): #Activation function
     return jnp.maximum(0,x)
 
 
-def shallowNN(x,W1,b1,nu1,da1,kmax1,dv1):# Initial shallow NN
-# W1 is a matrix with dimension dvxda, b1 is a vector of dimension dv  
-    nuv=nu(nu1,da1,kmax1) #dimension da x kmax x NT1
-    b1v=np.reshape(np.tile(b1,kmax1),(kmax1,dv1)).T
-    #print (np.shape(b1v))
-    return relu(np.matmul(W1,nuv)+b1v) #dimension dv x kmax
+def shallowNN(avs,W1,b1):# Initial shallow NN
+#avs is a matrix of dimension s1 x s2 x s3 x ... x sd x da
+# W1 is a matrix with dimension da x dv, b1 is a vector of dimension dv  
+    return relu(jnp.dot(avs,W1)+b1) #dimension dv x kmax
+
 def ProjectNN(vt1,W1,b1): #NN to project the outputs to Fourier layers to the solution
-#vt1 is of dimension dv x kmax
-#W1 is of size 1 x dv (for one dependent variable) 
+#vt1 is of dimension s1 x s2 x s3 x ... x sd x dv
+#W1 is a vector of length dv (for one dependent variable) 
 #b1 is a constant
-    return np.matmul(W1,vt1)+b1 #shape 1 x kmax
+    return jnp.dot(vt1,W1)+b1 #shape s1 x s2 x s3 x ... x sd
 
 def FastFT(vt1):#Fast Fourier transform
-#vt1 is of dimensions dv x kmax
-    f=np.fft.fft(vt1,axis=-1)
-    return f #each with dimensions dv x kmax
+#vt1 is of dimensions s1 x s2 x s3 x ... x sd x dv
+    f=jnp.fft.fftn(vt1,axes=(0,1)) #For two independent variables
+    return f #each with dimensions s1 x s2 x s3 x ... x sd x dv
 def InvFastFT(Fvt1):#Inverse Fast Fourier transform
 #pointwise evaluation
-#Fvt1 is of dimensions dv x kmax
-    f=np.fft.ifft(Fvt1,axis=-1)
-    return f
+#Fvt1 is of dimensions s1 x s2 x s3 x ... x sd x dv
+    f=jnp.fft.ifftn(Fvt1,axis=(0,1))
+    return f #dimension s1 x s2 x s3 x ... x sd x dv
 
 def FourierLayer(vt1,dv1,W1,kmax1,kappa1): 
 #W1 is of size dv x dv
-#vt1 is of size dv x kmax
+#vt1 is of size  s1 x s2 x s3 x ... x sd x dv
 #kappa1 is of size dv x dv x kmax
     Rtensor=np.swapaxes(np.fft.fft(kappa1,axis=-1),1,2) #Rtensor is of size dv x kmax x dv
     f=FastFT(vt1) #shape dv x kmax
@@ -89,7 +89,7 @@ def FourierLayer(vt1,dv1,W1,kmax1,kappa1):
     act_arg=np.matmul(W1,vt1)+kernelpart 
     return relu(act_arg) #dimension dv x kmax
 
-def OutputNN(W0,b0,W1,kappa1,W2,kappa2,W3,kappa3,W4,kappa4,Wf,bf,xs1,nu1,da1,kmax1,dv1): #NN output given input 
+def OutputNN(params,xs1,nu1,da1,kmax1,dv1): #NN output given input 
 #W0 is of dimension dv x da, b0 is a vector of dimension dv
 #W1 is of dimension dv x dv, kappa1 is of dimension dv x dv x kmax
 #W2 is of dimension dv x dv, kappa2 is of dimension dv x dv x kmax
