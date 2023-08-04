@@ -80,26 +80,19 @@ def FourierLayer(vt1,W1,kappa1):
 #W1 is of size dv x dv
 #vt1 is of size  s1 x s2 x s3 x ... x sd x dv
 #kappa1 is of size s1 x s2 x s3 x ... x sd x dv x dv
-    
     ftemp=FastFT(vt1) 
     RF = jnp.einsum('abc,abcd->abd',ftemp,kappa1) #For 2d Domain
     kernelpart=jnp.real(InvFastFT(RF))
     act_arg=jnp.dot(vt1,W1)+kernelpart 
     return relu(act_arg) #dimension s1 x s2 x s3 x ... x sd x dv
 
-def OutputNN(params,): #NN output given input 
-#W0 is of dimension dv x da, b0 is a vector of dimension dv
-#W1 is of dimension dv x dv, kappa1 is of dimension dv x dv x kmax
-#W2 is of dimension dv x dv, kappa2 is of dimension dv x dv x kmax
-#W3 is of dimension dv x dv, kappa3 is of dimension dv x dv x kmax
-#W4 is of dimension dv x dv, kappa4 is of dimension dv x dv x kmax   
-#Wf is of dimension 1 x dv, bf is a scalar
-    v0=shallowNN(xs1,W0,b0,nu1,da1,kmax1,dv1)
-    v1=FourierLayer(v0,dv1,W1,kmax1,kappa1)
-    v2=FourierLayer(v1,dv1,W2,kmax1,kappa2)
-    v3=FourierLayer(v2,dv1,W3,kmax1,kappa3)
-    v4=FourierLayer(v3,dv1,W4,kmax1,kappa4)
-    u=ProjectNN(v4,Wf,bf)
+def OutputNN(params,avs): #NN output given input 
+    W0,b0=params[0]
+    vt=shallowNN(avs,W0,b0)
+    for w,kapv in params[1:-1]:
+        vt=FourierLayer(vt,w,kapv)
+    w_last,b_last=params[-1]
+    u=ProjectNN(vt,w_last,b_last)
     return u #dimension kmax
 
 
