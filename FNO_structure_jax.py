@@ -68,12 +68,16 @@ def ProjectNN(vt1,W1,b1): #NN to project the outputs to Fourier layers to the so
 
 def FastFT(vt1):#Fast Fourier transform
 #vt1 is of dimensions s1 x s2 x s3 x ... x sd x dv
-    f=jnp.fft.fftn(vt1,axes=(0,1)) #For two independent variables
+    '''For 2d Domain -----'''
+    f=jnp.fft.fftn(vt1,axes=(0,1))
+    ''' ------------------'''
     return f #each with dimensions s1 x s2 x s3 x ... x sd x dv
 def InvFastFT(Fvt1):#Inverse Fast Fourier transform
 #pointwise evaluation
 #Fvt1 is of dimensions s1 x s2 x s3 x ... x sd x dv
+    '''For 2d Domain -----'''
     f=jnp.fft.ifftn(Fvt1,axis=(0,1))
+    ''' ------------------'''
     return f #dimension s1 x s2 x s3 x ... x sd x dv
 
 def FourierLayer(vt1,W1,kappa1): 
@@ -81,7 +85,9 @@ def FourierLayer(vt1,W1,kappa1):
 #vt1 is of size  s1 x s2 x s3 x ... x sd x dv
 #kappa1 is of size s1 x s2 x s3 x ... x sd x dv x dv
     ftemp=FastFT(vt1) 
-    RF = jnp.einsum('abc,abcd->abd',ftemp,kappa1) #For 2d Domain
+    '''For 2d Domain -----'''
+    RF = jnp.einsum('abc,abcd->abd',ftemp,kappa1) 
+    ''' ------------------'''
     kernelpart=jnp.real(InvFastFT(RF))
     act_arg=jnp.dot(vt1,W1)+kernelpart 
     return relu(act_arg) #dimension s1 x s2 x s3 x ... x sd x dv
