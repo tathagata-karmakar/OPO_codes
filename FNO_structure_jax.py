@@ -36,53 +36,30 @@ import collections
 from typing import Iterable
 
 
-#1-d Burgers' equation
+#Input in d dimensions x1, x2, ... , xd
+#The dimensions have discretization s1, s2, ... , sd respectively  
 
 '''
 Equation parameters
 '''
 
-def nu(nu1,da1,kmax1): #Equation parameter
-    return nu1*np.ones((da1,kmax1)) #dimension da x kmax x NT
+def nu(nu1,shape1): #shape1 is (s1, s2, ..., sd, da)
+    #Equation parameter
+    return nu1*np.ones(shape1) #dimension s1 x s2 x s3 x ... x sd x da
 
 '''
 Neural operator evaluation
 '''
-def sig(x): #Activation function
-    return 1.0/(1.0+np.exp(-x)) #dimension same as input
-'''
-def shallowNN(x,W1,b1,nu1,da1):# Initial shallow NN
-# W1 is a matrix with dimension dvxda, b1 is a vector of dimension dv
-    nuv=nu(x,nu1,da1)
-    return sig(np.matmul(W1,nuv)+b1) #dimension dv
-def FT(kmax1,Cv1,Sv1,vt1r,vt1i,dv1):#Fourier transform
-#vt1r and vt1i are of dimensions dv x Nx
-#Cv1 and Sv1 are of dimensions Nx x kmax
-    fr,fi=np.zeros(dv1,kmax1),np.zeros(dv1,kmax1)
-    for j in range(kmax1):
-        for i in range(dv1):
-            fr[i,j]=np.sum(vt1r[i]*Cv1[:,j]+vt1i[i]*Sv1[:,j])
-            fi[i,j]=np.sum(vt1i[i]*Cv1[:,j]-vt1r[i]*Sv1[:,j])
-    return fr,fi #each with dimensions dv x kmax
-def InverseFT(x,kmax1,ks1,f1r,f1i,Nx1,dv1):#Inverse Fourier transform
-#pointwise evaluation
-#f1r and f1i are of dimensions dv x kmax
-    vr,vi=np.zeros(dv1),np.zeros(dv1)
-    argv=2*np.pi*x*ks1/Lx
-    Cv1=np.cos(argv)
-    Sv1=np.sin(argv)
-    for i in range(dv1):
-        vr[i]=np.sum(f1r[i]*Cv1-f1i[i]*Sv1)
-        vi[i]=np.sum(f1i[i]*Cv1+f1r[i]*Sv1)
-    return vr,vi #Dimension dv
-'''
+def relu(x): #Activation function
+    return jnp.maximum(0,x)
+
 
 def shallowNN(x,W1,b1,nu1,da1,kmax1,dv1):# Initial shallow NN
 # W1 is a matrix with dimension dvxda, b1 is a vector of dimension dv  
     nuv=nu(nu1,da1,kmax1) #dimension da x kmax x NT1
     b1v=np.reshape(np.tile(b1,kmax1),(kmax1,dv1)).T
     #print (np.shape(b1v))
-    return sig(np.matmul(W1,nuv)+b1v) #dimension dv x kmax
+    return relu(np.matmul(W1,nuv)+b1v) #dimension dv x kmax
 def ProjectNN(vt1,W1,b1): #NN to project the outputs to Fourier layers to the solution
 #vt1 is of dimension dv x kmax
 #W1 is of size 1 x dv (for one dependent variable) 
@@ -109,8 +86,8 @@ def FourierLayer(vt1,dv1,W1,kmax1,kappa1):
     for i in range(kmax1):
         RF[:,i]=np.dot(Rtensor[:,i,:],f[:,i])
     kernelpart=np.real(InvFastFT(RF))
-    sig_arg=np.matmul(W1,vt1)+kernelpart 
-    return sig(sig_arg) #dimension dv x kmax
+    act_arg=np.matmul(W1,vt1)+kernelpart 
+    return relu(act_arg) #dimension dv x kmax
 
 def OutputNN(W0,b0,W1,kappa1,W2,kappa2,W3,kappa3,W4,kappa4,Wf,bf,xs1,nu1,da1,kmax1,dv1): #NN output given input 
 #W0 is of dimension dv x da, b0 is a vector of dimension dv
