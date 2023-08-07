@@ -56,10 +56,25 @@ def shallow_initial(da1,dv1,key,scale=1e-2):
     return scale*random.normal(w_key,(da1,dv1)), scale*random.normal(b_key,(dv1,))
 
 '''For 2d Domain -----'''
-def Fourier_initial(s1,s2,da1,dv1,key,scale=1e-2):
+def Fourier_initial(s1,s2,dv1,key,scale=1e-2):
     ''' ------------------'''
-    
-    
+    #initialize Fourier layer parameters
+    kappa_key,w_key=random.split(key)
+    return scale*random.normal(w_key,(dv1,dv1)), scale*random.normal(kappa_key,(s1,s2,dv1,dv1))
+
+def project_initial(dv1,key,scale=1e-2):
+    #initialize Projection NN parameters
+    w_key,b_key=random.split(key)
+    return scale*random.normal(w_key,(dv1,)), scale*random.normal(b_key)
+
+def init_params(s1,s2,da1,dv1,key):
+    keys=random.split(key,6)
+    params=[]
+    params.append(shallow_initial(da1,dv1,keys[0]))
+    for i in  range(4):
+        params.append(Fourier_initial(s1,s2,dv1,keys[i+1]))
+    params.append(project_initial(dv1,keys[5]))
+    return params
 
 '''
 Neural operator evaluation

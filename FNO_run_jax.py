@@ -24,28 +24,16 @@ rc('text',usetex=True)
 
 dv=64
 da=1
-kmax=16
-NT=20
+kmax=12
+#NT=20
 dx=0.01
 xs=np.linspace(0.01,0.99,kmax)
-ts=np.linspace(0,1,NT)
+ts=np.linspace(0,1,kmax)
 Lx=xs[1]-xs[0]
 ks=np.arange(0,kmax)
-Nvars=4*(dv**2)*(1+kmax)+dv*(da+2)+1
-nuval=0.001
-W0=np.random.rand(dv,da)
-b0=np.random.rand(dv)
-W1=np.random.rand(dv,dv)
-kappa1=np.random.rand(dv,dv,kmax)
-W2=np.random.rand(dv,dv)
-kappa2=np.random.rand(dv,dv,kmax)
-W3=np.random.rand(dv,dv)
-kappa3=np.random.rand(dv,dv,kmax)
-W4=np.random.rand(dv,dv)
-kappa4=np.random.rand(dv,dv,kmax)
-Wf=np.random.rand(1,dv)
-bf=np.random.rand(1)
 
+#Nvars=4*(dv**2)*(1+kmax)+dv*(da+2)+1
+'''
 tstart=time.time()
 #u=OutputNN(W0,b0,W1,kappa1,W2,kappa2,W3,kappa3,W4,kappa4,Wf,bf,xs,nuval,da,kmax,dv)
 lmbds=np.linspace(0.1,0.9,20)
@@ -54,4 +42,4 @@ tfinish=time.time()
 trun=tfinish-tstart
 
 print(trun,u)
-
+'''
