@@ -31,6 +31,7 @@ from jax import lax
 from jax import device_put
 from jax import make_jaxpr
 from jax.scipy.special import logsumexp
+from jax._src.nn.functions import relu,gelu
 from functools import partial
 import collections 
 from typing import Iterable
@@ -67,7 +68,9 @@ def project_initial(dv1,key,scale=1e-2):
     w_key,b_key=random.split(key)
     return scale*random.normal(w_key,(dv1,)), scale*random.normal(b_key)
 
+'''For 2d Domain -----'''
 def init_params(s1,s2,da1,dv1,key):
+    ''' ------------------'''
     keys=random.split(key,6)
     params=[]
     params.append(shallow_initial(da1,dv1,keys[0]))
@@ -79,19 +82,19 @@ def init_params(s1,s2,da1,dv1,key):
 '''
 Neural operator evaluation
 '''
-def relu(x1): #Activation function
-    return jnp.maximum(0,x1)
+def actv(x1): #Activation function
+    return gelu(x1)
 
 def shallowNN(avs1,W1,b1):# Initial shallow NN
 #avs1 is a matrix of dimension s1 x s2 x s3 x ... x sd x da
 # W1 is a matrix with dimension da x dv, b1 is a vector of dimension dv  
-    return relu(jnp.dot(avs1,W1)+b1) #dimension s1 x s2 x s3 x ... x sd x dv
+    return actv(jnp.dot(avs1,W1)+b1) #dimension s1 x s2 x s3 x ... x sd x dv
 
 def ProjectNN(vt1,W1,b1): #NN to project the outputs to Fourier layers to the solution
 #vt1 is of dimension s1 x s2 x s3 x ... x sd x dv
 #W1 is a vector of length dv (for one dependent variable) 
 #b1 is a constant
-    return jnp.dot(vt1,W1)+b1 #shape s1 x s2 x s3 x ... x sd
+    return actv(jnp.dot(vt1,W1)+b1) #shape s1 x s2 x s3 x ... x sd
 
 def FastFT(vt1):#Fast Fourier transform
 #vt1 is of dimensions s1 x s2 x s3 x ... x sd x dv
@@ -117,13 +120,40 @@ def FourierLayer(vt1,W1,kappa1):
     ''' ------------------'''
     kernelpart=jnp.real(InvFastFT(RF))
     act_arg=jnp.dot(vt1,W1)+kernelpart 
-    return relu(act_arg) #dimension s1 x s2 x s3 x ... x sd x dv
+    return actv(act_arg) #dimension s1 x s2 x s3 x ... x sd x dv
 
-def OutputNN(params,avs1): #NN output given input 
-    W0,b0=params[0]
+def OutputNN(params1,avs1): #NN output given input 
+    W0,b0=params1[0]
     vt=shallowNN(avs1,W0,b0)
-    for w,kapv in params[1:-1]:
+    for w,kapv in params1[1:-1]:
         vt=FourierLayer(vt,w,kapv)
-    w_last,b_last=params[-1]
+    w_last,b_last=params1[-1]
     u=ProjectNN(vt,w_last,b_last)
     return u #dimension s1 x s2 x s3 x ... x sd
+
+'''
+Cost function calculation
+'''
+def gauss(x,mu,sigma):
+    return jnp.exp(-(x-mu)**2/(2*sigma**2))/(sigma*jnp.sqrt(2*jnp.pi))
+
+'''For 2d Domain -----'''
+def CostF(u,avs1,dx1,dt1):
+    ''' ------------------'''
+    dudx=jnp.gradient(u,dx1,axis=0)
+    dudt=jnp.gradient(u,dt1,axis=1)
+    #cf=intg(intg((avs1[:,:,0]*dudx+dudt)**2,ts1,axis=-1),xs1)+intg((u[:,0]-gauss(xs1,0.5,0.3))**2,xs1)
+    cf=jnp.sum((avs1[:,:,0]*dudx+dudt)**2)*dx1*dt1+100*jnp.sum((u[:,0]-avs1[:,0,1])**2)*dx1
+    return cf
+def TotalCost(params1,avlist,xs1,ts1,dx1,dt1):
+    cost=0
+    for avs1 in avlist:
+        u=OutputNN(params1, avs1)
+        cost=cost+CostF(u,avs1,dx1,dt1)
+    return cost/len(avlist)
+@jit
+def update(params1,alist1,xs1,ts1,dx1,dt1,step_size):
+    grads=grad(TotalCost)(params1,alist1,xs1,ts1,dx1,dt1)
+    return [(w - step_size * dw, b - step_size * db)
+          for (w, b), (dw, db) in zip(params1, grads)]
+

@@ -31,3 +31,7 @@ from functools import partial
 import collections 
 from typing import Iterable
 from FNO_structure_jax import *
+
+
+
+
