@@ -82,10 +82,10 @@ Neural operator evaluation
 def relu(x1): #Activation function
     return jnp.maximum(0,x1)
 
-def shallowNN(avs,W1,b1):# Initial shallow NN
-#avs is a matrix of dimension s1 x s2 x s3 x ... x sd x da
+def shallowNN(avs1,W1,b1):# Initial shallow NN
+#avs1 is a matrix of dimension s1 x s2 x s3 x ... x sd x da
 # W1 is a matrix with dimension da x dv, b1 is a vector of dimension dv  
-    return relu(jnp.dot(avs,W1)+b1) #dimension s1 x s2 x s3 x ... x sd x dv
+    return relu(jnp.dot(avs1,W1)+b1) #dimension s1 x s2 x s3 x ... x sd x dv
 
 def ProjectNN(vt1,W1,b1): #NN to project the outputs to Fourier layers to the solution
 #vt1 is of dimension s1 x s2 x s3 x ... x sd x dv
@@ -103,7 +103,7 @@ def InvFastFT(Fvt1):#Inverse Fast Fourier transform
 #pointwise evaluation
 #Fvt1 is of dimensions s1 x s2 x s3 x ... x sd x dv
     '''For 2d Domain -----'''
-    f=jnp.fft.ifftn(Fvt1,axis=(0,1))
+    f=jnp.fft.ifftn(Fvt1,axes=(0,1))
     ''' ------------------'''
     return f #dimension s1 x s2 x s3 x ... x sd x dv
 
@@ -119,9 +119,9 @@ def FourierLayer(vt1,W1,kappa1):
     act_arg=jnp.dot(vt1,W1)+kernelpart 
     return relu(act_arg) #dimension s1 x s2 x s3 x ... x sd x dv
 
-def OutputNN(params,avs): #NN output given input 
+def OutputNN(params,avs1): #NN output given input 
     W0,b0=params[0]
-    vt=shallowNN(avs,W0,b0)
+    vt=shallowNN(avs1,W0,b0)
     for w,kapv in params[1:-1]:
         vt=FourierLayer(vt,w,kapv)
     w_last,b_last=params[-1]
