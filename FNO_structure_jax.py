@@ -43,17 +43,29 @@ from typing import Iterable
 '''
 Equation parameters
 '''
-
 def aMatrix(a1,shape1): #shape1 is (s1, s2, ..., sd, da)
     #Equation parameter
     return a1*np.ones(shape1) #dimension s1 x s2 x s3 x ... x sd x da
 
 '''
+Initialization
+'''
+def shallow_initial(da1,dv1,key,scale=1e-2):
+    #initialize shallow NN parameters
+    w_key,b_key=random.split(key)
+    return scale*random.normal(w_key,(da1,dv1)), scale*random.normal(b_key,(dv1,))
+
+'''For 2d Domain -----'''
+def Fourier_initial(s1,s2,da1,dv1,key,scale=1e-2):
+    ''' ------------------'''
+    
+    
+
+'''
 Neural operator evaluation
 '''
-def relu(x): #Activation function
-    return jnp.maximum(0,x)
-
+def relu(x1): #Activation function
+    return jnp.maximum(0,x1)
 
 def shallowNN(avs,W1,b1):# Initial shallow NN
 #avs is a matrix of dimension s1 x s2 x s3 x ... x sd x da
@@ -99,16 +111,4 @@ def OutputNN(params,avs): #NN output given input
         vt=FourierLayer(vt,w,kapv)
     w_last,b_last=params[-1]
     u=ProjectNN(vt,w_last,b_last)
-    return u #dimension kmax
-
-
-
-'''
-xvs,kvs=np.meshgrid(xs,ks,indexing='ij')
-
-argv=2*np.pi*xvs*kvs/Lx
-Cvs=np.cos(argv)
-Svs=np.sin(argv)
-'''
-
-
+    return u #dimension s1 x s2 x s3 x ... x sd

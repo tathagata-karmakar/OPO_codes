@@ -17,7 +17,7 @@ import numpy as np
 from scipy.integrate import simps as intg
 from matplotlib import rc
 from pylab import rcParams
-from FNO_structure import *
+from FNO_structure_jax import *
 os.environ["PATH"] += os.pathsep + '/Library/TeX/texbin'
 rc('text',usetex=True)
 
