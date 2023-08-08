@@ -126,8 +126,8 @@ def FourierLayer(vt1,W1,kappa1):
 def OutputNN(params1,avs1): #NN output given input 
     W0,b0=params1[0]
     vt=shallowNN(avs1,W0,b0)
-    for w,kapv in params1[1:-1]:
-        vt=FourierLayer(vt,w,kapv)
+    #for w,kapv in params1[1:-1]:
+    #    vt=FourierLayer(vt,w,kapv)
     w_last,b_last=params1[-1]
     u=ProjectNN(vt,w_last,b_last)
     return u #dimension s1 x s2 x s3 x ... x sd
@@ -143,15 +143,26 @@ def CostF(u,avs1,xs1,dx1,dt1):
     ''' ------------------'''
     dudx=jnp.gradient(u,dx1,axis=0)
     dudt=jnp.gradient(u,dt1,axis=1)
-    cf=jnp.sum((avs1[:,:,0]*dudx+dudt)**2)*dx1*dt1+jnp.sum((u[:,0]-gauss(xs1,0.5,0.08))**2)*dx1
+    cf=jnp.sum((avs1[:,:,0]*dudx+dudt)**2)*dx1*dt1+jnp.sum((u[:,0]-avs1[:,0,1])**2)*dx1
     #cf=jnp.sum((avs1[:,:,0]-dudt)**2)*dx1*dt1+jnp.sum((u[:,0]-gauss(xs1,0.5,0.08))**2)*dx1
     return cf
-def TotalCost(params1,avlist,xs1,ts1,dx1,dt1):
+def TotalCost1(params1,avlist,xs1,ts1,dx1,dt1):
     cost=0
     for avs1 in avlist:
         u=OutputNN(params1, avs1)
         cost=cost+CostF(u,avs1,xs1,dx1,dt1)
     return cost/len(avlist)
+
+def CostCal(params1,avs1,xs1,ts1,dx1,dt1):
+    u=OutputNN(params1, avs1)
+    cost=CostF(u,avs1,xs1,dx1,dt1)
+    return cost
+batch_cost=vmap(CostCal,in_axes=[None,0,None,None,None,None])
+
+def TotalCost(params1,avlist,xs1,ts1,dx1,dt1):
+    costs=batch_cost(params1,avlist,xs1,ts1,dx1,dt1)
+    return jnp.sum(costs)/len(avlist)
+
 @jit
 def update(params1,alist1,xs1,ts1,dx1,dt1,step_size):
     grads=grad(TotalCost)(params1,alist1,xs1,ts1,dx1,dt1)
