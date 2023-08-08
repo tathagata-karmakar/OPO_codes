@@ -24,9 +24,9 @@ from jaxopt import OptaxSolver
 import optax
 
 
-dv=1
-da=64
-kmax=21
+dv=64
+da=2
+kmax=31
 s1=kmax
 s2=kmax+1
 Nvars=1+dv*(da+2)+4*s1*s2*dv*(dv+1)
@@ -66,9 +66,9 @@ print(trun,cost)
 
 step_size=1e-2
 num_epochs=100
-opt=optax.adam(step_size)
+opt=optax.adam(step_size/10)
 stime=time.time()
-solver=OptaxSolver(opt=opt, fun=TotalCost,maxiter=100)
+solver=OptaxSolver(opt=opt, fun=TotalCost,maxiter=num_epochs)
 res=solver.run(params,alist,xs,ts,dx,dt)
 ftime=time.time()
 print("Adam time :", ftime-stime)
