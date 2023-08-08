@@ -11,7 +11,7 @@ Created on Wed Jul 26 22:02:54 2023
 #[2] Z. Li, H. Zheng, N. Kovachki, D. Jin, H. Chen, B. Liu, K. Azizzadenesheli, and A. Anandkumar, Physics-Informed Neural Operator for Learning Partial Differential Equations, arXiv:2111.03794.
 
 import os
-import qutip as qt
+#import qutip as qt
 import time
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -69,14 +69,14 @@ def project_initial(dv1,key,scale=1e-2):
     return scale*random.normal(w_key,(dv1,)), scale*random.normal(b_key)
 
 '''For 2d Domain -----'''
-def init_params(s1,s2,da1,dv1,key):
+def init_params(s1,s2,da1,dv1,key,scale=1e-2):
     ''' ------------------'''
     keys=random.split(key,6)
     params=[]
-    params.append(shallow_initial(da1,dv1,keys[0]))
+    params.append(shallow_initial(da1,dv1,keys[0],scale))
     for i in  range(4):
-        params.append(Fourier_initial(s1,s2,dv1,keys[i+1]))
-    params.append(project_initial(dv1,keys[5]))
+        params.append(Fourier_initial(s1,s2,dv1,keys[i+1],scale))
+    params.append(project_initial(dv1,keys[5],scale))
     return params
 
 '''
@@ -126,8 +126,8 @@ def FourierLayer(vt1,W1,kappa1):
 def OutputNN(params1,avs1): #NN output given input 
     W0,b0=params1[0]
     vt=shallowNN(avs1,W0,b0)
-    #for w,kapv in params1[1:-1]:
-    #    vt=FourierLayer(vt,w,kapv)
+    for w,kapv in params1[1:-1]:
+        vt=FourierLayer(vt,w,kapv)
     w_last,b_last=params1[-1]
     u=ProjectNN(vt,w_last,b_last)
     return u #dimension s1 x s2 x s3 x ... x sd
@@ -143,7 +143,7 @@ def CostF(u,avs1,xs1,dx1,dt1):
     ''' ------------------'''
     dudx=jnp.gradient(u,dx1,axis=0)
     dudt=jnp.gradient(u,dt1,axis=1)
-    cf=jnp.sum((avs1[:,:,0]*dudx+dudt)**2)*dx1*dt1+jnp.sum((u[:,0]-avs1[:,0,1])**2)*dx1
+    cf=jnp.sum((avs1[:,:,0]*dudx+dudt)**2)*dx1*dt1+10*jnp.sum((u[:,0]-avs1[:,0,1])**2)*dx1
     #cf=jnp.sum((avs1[:,:,0]-dudt)**2)*dx1*dt1+jnp.sum((u[:,0]-gauss(xs1,0.5,0.08))**2)*dx1
     return cf
 def TotalCost1(params1,avlist,xs1,ts1,dx1,dt1):
