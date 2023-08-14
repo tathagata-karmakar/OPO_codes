@@ -139,33 +139,33 @@ def gauss(x,mu,sigma):
     return jnp.exp(-(x-mu)**2/(2*sigma**2))/(sigma*jnp.sqrt(2*jnp.pi))
 
 '''For 2d Domain -----'''
-def CostF(u,avs1,xs1,dx1,dt1):
+def CostF(u,avs1,dx1,dt1):
     ''' ------------------'''
     dudx=jnp.gradient(u,dx1,axis=0)
     dudt=jnp.gradient(u,dt1,axis=1)
     cf=jnp.sum((avs1[:,:,0]*dudx+dudt)**2)*dx1*dt1+10*jnp.sum((u[:,0]-avs1[:,0,1])**2)*dx1
     #cf=jnp.sum((avs1[:,:,0]-dudt)**2)*dx1*dt1+jnp.sum((u[:,0]-gauss(xs1,0.5,0.08))**2)*dx1
     return cf
-def TotalCost1(params1,avlist,xs1,ts1,dx1,dt1):
+def TotalCost1(params1,avlist,xs1,dx1,dt1):
     cost=0
     for avs1 in avlist:
         u=OutputNN(params1, avs1)
-        cost=cost+CostF(u,avs1,xs1,dx1,dt1)
+        cost=cost+CostF(u,avs1,dx1,dt1)
     return cost/len(avlist)
 
-def CostCal(params1,avs1,xs1,ts1,dx1,dt1):
+def CostCal(params1,avs1,dx1,dt1):
     u=OutputNN(params1, avs1)
-    cost=CostF(u,avs1,xs1,dx1,dt1)
+    cost=CostF(u,avs1,dx1,dt1)
     return cost
 batch_cost=vmap(CostCal,in_axes=[None,0,None,None,None,None])
 
-def TotalCost(params1,avlist,xs1,ts1,dx1,dt1):
-    costs=batch_cost(params1,avlist,xs1,ts1,dx1,dt1)
+def TotalCost(params1,avlist,dx1,dt1):
+    costs=batch_cost(params1,avlist,dx1,dt1)
     return jnp.sum(costs)/len(avlist)
 
 @jit
-def update(params1,alist1,xs1,ts1,dx1,dt1,step_size):
-    grads=grad(TotalCost)(params1,alist1,xs1,ts1,dx1,dt1)
+def update(params1,alist1,dx1,dt1,step_size):
+    grads=grad(TotalCost)(params1,alist1,dx1,dt1)
     return [(w - step_size * dw, b - step_size * db)
           for (w, b), (dw, db) in zip(params1, grads)]
 

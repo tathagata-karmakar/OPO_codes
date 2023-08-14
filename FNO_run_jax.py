@@ -26,7 +26,7 @@ import optax
 
 dv=64
 da=2
-kmax=31
+kmax=15
 s1=kmax
 s2=kmax+1
 Nvars=1+dv*(da+2)+4*s1*s2*dv*(dv+1)
@@ -44,14 +44,15 @@ avalue=0.2
 avs=np.linspace(0.1,10,2)
 mu=0.5
 sigma=0.08
-sigmas=np.linspace(0.08,1,2000)
+sigmas=np.linspace(0.08,1,1000)
 alist=[]
+eps=1e-9
 for av in avs:
     for sigmav in sigmas:    
         #print(sigmav)
         atmp=np.zeros((s1,s2,da))
         atmp[:,:,0]=aMatrix(av,(s1,s2))
-        atmp[:,:,1]=gauss(xv,mu,sigmav)
+        atmp[:,:,1]=gauss(xv,mu,sigmav)+eps*jnp.exp(-xv**2+tv**2)
         alist.append(atmp)
     
 alist=jnp.array(alist)
