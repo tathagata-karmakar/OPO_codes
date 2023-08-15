@@ -24,9 +24,9 @@ from jaxopt import OptaxSolver
 import optax
 
 
-dv=6
+dv=3
 da=2
-kmax=5
+kmax=12
 s1=25
 s2=25+1
 '''Padding Lengths'''
@@ -41,9 +41,10 @@ ts=np.linspace(0,1,s2)
 dx=xs[1]-xs[0]
 dt=ts[1]-ts[0]
 xv,tv=np.meshgrid(xs,ts,indexing='ij')
-
+i_seed=np.random.randint(0,1000)
+#i_seed=748
 ks=np.arange(0,kmax)
-params=init_params(s1,s2,kmax,kmax,da,dv,random.PRNGKey(np.random.randint(0,1000)))
+params=init_params(s1,s2,kmax,kmax,da,dv,random.PRNGKey(i_seed))
 avalue=0.2
 avs=np.linspace(0.01,1,5)
 mu=0.5
@@ -102,3 +103,4 @@ for epoch in  range(num_epochs):
 print("Manual time : ", time.time()-Full_stime) 
 u=OutputNN(params,alist[0])
 plt.plot(xs,u[:,0])
+print(i_seed)

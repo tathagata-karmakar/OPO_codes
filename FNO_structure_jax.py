@@ -99,7 +99,7 @@ def ProjectNN(vt1,W1,b1): #NN to project the outputs to Fourier layers to the so
 def FastFT(vt1):#Fast Fourier transform
 #vt1 is of dimensions s1 x s2 x s3 x ... x sd x dv
     '''For 2d Domain -----'''
-    f=jnp.fft.fftn(vt1,s=(5,5),axes=(0,1))
+    f=jnp.fft.fftn(vt1,s=(12,12),axes=(0,1))
     ''' ------------------'''
     return f #each with dimensions s1 x s2 x s3 x ... x sd x dv
 def InvFastFT(Fvt1):#Inverse Fast Fourier transform
