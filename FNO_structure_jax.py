@@ -69,9 +69,9 @@ def project_initial(dv1,key,scale=1e-2):
     return scale*random.normal(w_key,(dv1,)), scale*random.normal(b_key)
 
 '''For 2d Domain -----'''
-def init_params(s1,s2,k1,k2,da1,dv1,key,scale=1e-1):
+def init_params(s1,s2,k1,k2,da1,dv1,key,scale=1e0):
     ''' ------------------'''
-    keys=random.split(key,6)
+    keys=random.split(key,3)
     params=[]
     params.append(shallow_initial(da1,dv1,keys[0],scale))
     for i in  range(4):
@@ -94,7 +94,7 @@ def ProjectNN(vt1,W1,b1): #NN to project the outputs to Fourier layers to the so
 #vt1 is of dimension s1 x s2 x s3 x ... x sd x dv
 #W1 is a vector of length dv (for one dependent variable) 
 #b1 is a constant
-    return actv(jnp.dot(vt1,W1)+b1) #shape s1 x s2 x s3 x ... x sd
+    return jnp.dot(vt1,W1)+b1 #shape s1 x s2 x s3 x ... x sd
 
 def FastFT(vt1):#Fast Fourier transform
 #vt1 is of dimensions s1 x s2 x s3 x ... x sd x dv

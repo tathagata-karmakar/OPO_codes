@@ -30,8 +30,8 @@ kmax=5
 s1=25
 s2=25+1
 '''Padding Lengths'''
-s1p=6
-s2p=6
+s1p=5
+s2p=5
 '''---------------''' 
 Nvars=1+dv*(da+2)+4*s1*s2*dv+4*kmax*kmax*dv*dv
 #NT=20
@@ -72,8 +72,8 @@ trun=tfinish-tstart
 
 print(trun,cost)
 
-step_size=1e-3
-num_epochs=10
+step_size=1e-5
+num_epochs=500
 
 '''
 opt=optax.adam(step_size/10)
