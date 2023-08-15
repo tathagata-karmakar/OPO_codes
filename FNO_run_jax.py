@@ -24,7 +24,7 @@ from jaxopt import OptaxSolver
 import optax
 
 
-dv=3
+dv=8
 da=2
 kmax=12
 s1=25
@@ -42,7 +42,7 @@ dx=xs[1]-xs[0]
 dt=ts[1]-ts[0]
 xv,tv=np.meshgrid(xs,ts,indexing='ij')
 i_seed=np.random.randint(0,1000)
-#i_seed=748
+#i_seed=97
 ks=np.arange(0,kmax)
 params=init_params(s1,s2,kmax,kmax,da,dv,random.PRNGKey(i_seed))
 avalue=0.2
@@ -72,12 +72,12 @@ tfinish=time.time()
 trun=tfinish-tstart
 
 print(trun,cost)
-
-step_size=1e-5
+l0=1e-8
+step_size=l0
 num_epochs=500
 
 '''
-opt=optax.adam(step_size/10)
+opt=optax.adam(step_size)
 stime=time.time()
 solver=OptaxSolver(opt=opt, fun=TotalCost,maxiter=num_epochs)
 res=solver.run(params,alist,dx,dt,padmatrix)
@@ -86,12 +86,14 @@ print("Adam time :", ftime-stime)
 paramsf,state=res
 
 u=OutputNN(paramsf,alist[0])
-plt.plot(xs,u[:,0],'k')
+plt.plot(xs[:-s1p],u[:-s1p,0],'k')
 '''
 costlist=np.zeros(num_epochs)
 Full_stime=time.time()
 for epoch in  range(num_epochs):
     stime=time.time()
+    if (epoch>50):
+        step_size=100.*l0
     params=update(params,alist,dx,dt,step_size,padmatrix)
     epoch_time=time.time()-stime
     train_acc = TotalCost(params,alist,dx,dt,padmatrix)
@@ -102,5 +104,5 @@ for epoch in  range(num_epochs):
     #print("Test set accuracy {}".format(test_acc))
 print("Manual time : ", time.time()-Full_stime) 
 u=OutputNN(params,alist[0])
-plt.plot(xs,u[:,0])
+plt.plot(xs[:-s1p],u[:-s1p,0])
 print(i_seed)

@@ -69,7 +69,7 @@ def project_initial(dv1,key,scale=1e-2):
     return scale*random.normal(w_key,(dv1,)), scale*random.normal(b_key)
 
 '''For 2d Domain -----'''
-def init_params(s1,s2,k1,k2,da1,dv1,key,scale=1e0):
+def init_params(s1,s2,k1,k2,da1,dv1,key,scale=1e1/8):
     ''' ------------------'''
     keys=random.split(key,3)
     params=[]
@@ -157,7 +157,7 @@ def CostF(u,avs1,dx1,dt1,padM):
     ''' ------------------'''
     dudx=jnp.gradient(u,dx1,axis=0)
     dudt=jnp.gradient(u,dt1,axis=1)
-    cf=0*1e6*jnp.sum((abs(avs1[:,:,0]*dudx+dudt))*padM)*dx1*dt1+200*jnp.sum(((u[:,0]-avs1[:,0,1])**2)*padM[:,0])*dx1
+    cf=(1e3*jnp.sum((abs(avs1[:,:,0]*dudx+dudt))*padM)*dx1*dt1+200*jnp.sum(((u[:,0]-avs1[:,0,1])**2)*padM[:,0])*dx1)
     #cf=jnp.sum((avs1[:,:,0]-dudt)**2)*dx1*dt1+jnp.sum((u[:,0]-gauss(xs1,0.5,0.08))**2)*dx1
     return cf
 def TotalCost1(params1,avlist,dx1,dt1):
