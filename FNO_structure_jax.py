@@ -57,11 +57,11 @@ def shallow_initial(da1,dv1,key,scale=1e-2):
     return scale*random.normal(w_key,(da1,dv1)), scale*random.normal(b_key,(dv1,))
 
 '''For 2d Domain -----'''
-def Fourier_initial(s1,s2,dv1,key,scale=1e-2):
+def Fourier_initial(k1,k2,dv1,key,scale=1e-2):
     ''' ------------------'''
     #initialize Fourier layer parameters
     kappa_key,w_key=random.split(key)
-    return scale*random.normal(w_key,(dv1,dv1)), scale*random.normal(kappa_key,(s1,s2,dv1,dv1))
+    return scale*random.normal(w_key,(dv1,dv1)), scale*(random.normal(kappa_key,(k1,k2,dv1,dv1))+1j*random.normal(kappa_key,(k1,k2,dv1,dv1)))
 
 def project_initial(dv1,key,scale=1e-2):
     #initialize Projection NN parameters
@@ -69,13 +69,13 @@ def project_initial(dv1,key,scale=1e-2):
     return scale*random.normal(w_key,(dv1,)), scale*random.normal(b_key)
 
 '''For 2d Domain -----'''
-def init_params(s1,s2,da1,dv1,key,scale=1e-2):
+def init_params(s1,s2,k1,k2,da1,dv1,key,scale=1e-1):
     ''' ------------------'''
     keys=random.split(key,6)
     params=[]
     params.append(shallow_initial(da1,dv1,keys[0],scale))
     for i in  range(4):
-        params.append(Fourier_initial(s1,s2,dv1,keys[i+1],scale))
+        params.append(Fourier_initial(k1,k2,dv1,keys[i+1],scale))
     params.append(project_initial(dv1,keys[5],scale))
     return params
 
@@ -99,14 +99,14 @@ def ProjectNN(vt1,W1,b1): #NN to project the outputs to Fourier layers to the so
 def FastFT(vt1):#Fast Fourier transform
 #vt1 is of dimensions s1 x s2 x s3 x ... x sd x dv
     '''For 2d Domain -----'''
-    f=jnp.fft.fftn(vt1,axes=(0,1))
+    f=jnp.fft.fftn(vt1,s=(5,5),axes=(0,1))
     ''' ------------------'''
     return f #each with dimensions s1 x s2 x s3 x ... x sd x dv
 def InvFastFT(Fvt1):#Inverse Fast Fourier transform
 #pointwise evaluation
 #Fvt1 is of dimensions s1 x s2 x s3 x ... x sd x dv
     '''For 2d Domain -----'''
-    f=jnp.fft.ifftn(Fvt1,axes=(0,1))
+    f=jnp.fft.ifftn(Fvt1,s=(25,26),axes=(0,1))
     ''' ------------------'''
     return f #dimension s1 x s2 x s3 x ... x sd x dv
 
@@ -123,11 +123,25 @@ def FourierLayer(vt1,W1,kappa1):
     act_arg=jnp.dot(vt1,W1)+kernelpart 
     return actv(act_arg) #dimension s1 x s2 x s3 x ... x sd x dv
 
+def FourierLayerR(vt1,W1,Rphi1): 
+#W1 is of size dv x dv
+#vt1 is of size  s1 x s2 x s3 x ... x sd x dv
+#Rphi1 is of size kmax1 x kmax2 x kmax3 x ... x kmaxd x dv x dv
+    Rphi2=(Rphi1+jnp.conjugate(jnp.flip(Rphi1,axis=(0,1))))/2.0
+    ftemp=FastFT(vt1) 
+    '''For 2d Domain -----'''
+    #Rphi=FastFT(kappa1)
+    RF = jnp.einsum('abc,abcd->abd',ftemp,Rphi2) 
+    ''' ------------------'''
+    kernelpart=jnp.real(InvFastFT(RF))
+    act_arg=jnp.dot(vt1,W1)+kernelpart 
+    return actv(act_arg) #dimension s1 x s2 x s3 x ... x sd x dv
+
 def OutputNN(params1,avs1): #NN output given input 
     W0,b0=params1[0]
     vt=shallowNN(avs1,W0,b0)
     for w,kapv in params1[1:-1]:
-        vt=FourierLayer(vt,w,kapv)
+        vt=FourierLayerR(vt,w,kapv)
     w_last,b_last=params1[-1]
     u=ProjectNN(vt,w_last,b_last)
     return u #dimension s1 x s2 x s3 x ... x sd
@@ -139,33 +153,33 @@ def gauss(x,mu,sigma):
     return jnp.exp(-(x-mu)**2/(2*sigma**2))/(sigma*jnp.sqrt(2*jnp.pi))
 
 '''For 2d Domain -----'''
-def CostF(u,avs1,dx1,dt1):
+def CostF(u,avs1,dx1,dt1,padM):
     ''' ------------------'''
     dudx=jnp.gradient(u,dx1,axis=0)
     dudt=jnp.gradient(u,dt1,axis=1)
-    cf=jnp.sum((avs1[:,:,0]*dudx+dudt)**2)*dx1*dt1+10*jnp.sum((u[:,0]-avs1[:,0,1])**2)*dx1
+    cf=0*1e6*jnp.sum((abs(avs1[:,:,0]*dudx+dudt))*padM)*dx1*dt1+200*jnp.sum(((u[:,0]-avs1[:,0,1])**2)*padM[:,0])*dx1
     #cf=jnp.sum((avs1[:,:,0]-dudt)**2)*dx1*dt1+jnp.sum((u[:,0]-gauss(xs1,0.5,0.08))**2)*dx1
     return cf
-def TotalCost1(params1,avlist,xs1,dx1,dt1):
+def TotalCost1(params1,avlist,dx1,dt1):
     cost=0
     for avs1 in avlist:
         u=OutputNN(params1, avs1)
         cost=cost+CostF(u,avs1,dx1,dt1)
     return cost/len(avlist)
 
-def CostCal(params1,avs1,dx1,dt1):
+def CostCal(params1,avs1,dx1,dt1,padM):
     u=OutputNN(params1, avs1)
-    cost=CostF(u,avs1,dx1,dt1)
+    cost=CostF(u,avs1,dx1,dt1,padM)
     return cost
-batch_cost=vmap(CostCal,in_axes=[None,0,None,None,None,None])
+batch_cost=vmap(CostCal,in_axes=[None,0,None,None,None])
 
-def TotalCost(params1,avlist,dx1,dt1):
-    costs=batch_cost(params1,avlist,dx1,dt1)
+def TotalCost(params1,avlist,dx1,dt1,padM):
+    costs=batch_cost(params1,avlist,dx1,dt1,padM)
     return jnp.sum(costs)/len(avlist)
 
 @jit
-def update(params1,alist1,dx1,dt1,step_size):
-    grads=grad(TotalCost)(params1,alist1,dx1,dt1)
+def update(params1,alist1,dx1,dt1,step_size,padM):
+    grads=grad(TotalCost)(params1,alist1,dx1,dt1,padM)
     return [(w - step_size * dw, b - step_size * db)
           for (w, b), (dw, db) in zip(params1, grads)]
 
