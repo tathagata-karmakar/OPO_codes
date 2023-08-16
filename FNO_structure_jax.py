@@ -106,7 +106,7 @@ def InvFastFT(Fvt1):#Inverse Fast Fourier transform
 #pointwise evaluation
 #Fvt1 is of dimensions s1 x s2 x s3 x ... x sd x dv
     '''For 2d Domain -----'''
-    f=jnp.fft.ifftn(Fvt1,s=(25,26),axes=(0,1))
+    f=jnp.fft.ifftn(Fvt1,s=(33,27),axes=(0,1))
     ''' ------------------'''
     return f #dimension s1 x s2 x s3 x ... x sd x dv
 
@@ -157,7 +157,7 @@ def CostF(u,avs1,dx1,dt1,padM):
     ''' ------------------'''
     dudx=jnp.gradient(u,dx1,axis=0)
     dudt=jnp.gradient(u,dt1,axis=1)
-    cf=(1e3*jnp.sum((abs(avs1[:,:,0]*dudx+dudt))*padM)*dx1*dt1+200*jnp.sum(((u[:,0]-avs1[:,0,1])**2)*padM[:,0])*dx1)
+    cf=(1e2*jnp.sum((abs(avs1[:,:,0]*dudx+dudt))*padM)*dx1*dt1+200*jnp.sum(((u[:,0]-avs1[:,0,1])**2)*padM[:,0])*dx1)
     #cf=jnp.sum((avs1[:,:,0]-dudt)**2)*dx1*dt1+jnp.sum((u[:,0]-gauss(xs1,0.5,0.08))**2)*dx1
     return cf
 def TotalCost1(params1,avlist,dx1,dt1):

@@ -24,25 +24,27 @@ from jaxopt import OptaxSolver
 import optax
 
 
-dv=8
+dv=5
 da=2
 kmax=12
-s1=25
-s2=25+1
+s1=33
+s2=27
 '''Padding Lengths'''
-s1p=5
-s2p=5
+s1p=6
+s2p=6
 '''---------------''' 
 Nvars=1+dv*(da+2)+4*s1*s2*dv+4*kmax*kmax*dv*dv
 #NT=20
 dx=0.01
 xs=np.linspace(-2,2,s1)
-ts=np.linspace(0,1,s2)
+ts=np.linspace(0,1,s2-s2p)
 dx=xs[1]-xs[0]
 dt=ts[1]-ts[0]
+ts=np.linspace(0,dt*(s2-1),s2)
+
 xv,tv=np.meshgrid(xs,ts,indexing='ij')
 i_seed=np.random.randint(0,1000)
-#i_seed=97
+i_seed=628
 ks=np.arange(0,kmax)
 params=init_params(s1,s2,kmax,kmax,da,dv,random.PRNGKey(i_seed))
 avalue=0.2
@@ -72,9 +74,9 @@ tfinish=time.time()
 trun=tfinish-tstart
 
 print(trun,cost)
-l0=1e-8
+l0=1e-4
 step_size=l0
-num_epochs=500
+num_epochs=200
 
 '''
 opt=optax.adam(step_size)
@@ -92,8 +94,8 @@ costlist=np.zeros(num_epochs)
 Full_stime=time.time()
 for epoch in  range(num_epochs):
     stime=time.time()
-    if (epoch>50):
-        step_size=100.*l0
+    #if (epoch>100):
+     #   step_size=10.*l0
     params=update(params,alist,dx,dt,step_size,padmatrix)
     epoch_time=time.time()-stime
     train_acc = TotalCost(params,alist,dx,dt,padmatrix)
