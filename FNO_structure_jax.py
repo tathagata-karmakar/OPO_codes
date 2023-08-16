@@ -41,6 +41,8 @@ from typing import Iterable
 #The dimensions have discretization s1, s2, ... , sd respectively  
 #s1 x s2 x s3 x .. x sd = n
 
+
+
 '''
 Equation parameters
 '''
@@ -69,7 +71,7 @@ def project_initial(dv1,key,scale=1e-2):
     return scale*random.normal(w_key,(dv1,)), scale*random.normal(b_key)
 
 '''For 2d Domain -----'''
-def init_params(s1,s2,k1,k2,da1,dv1,key,scale=1e1/8):
+def init_params(s1,s2,k1,k2,da1,dv1,key,scale=1e1/7):
     ''' ------------------'''
     keys=random.split(key,3)
     params=[]
@@ -87,57 +89,59 @@ def actv(x1): #Activation function
 
 def shallowNN(avs1,W1,b1):# Initial shallow NN
 #avs1 is a matrix of dimension s1 x s2 x s3 x ... x sd x da
-# W1 is a matrix with dimension da x dv, b1 is a vector of dimension dv  
+# W1 is a matrix with dimension da x dv, b1 is a vector of dimension dv
     return actv(jnp.dot(avs1,W1)+b1) #dimension s1 x s2 x s3 x ... x sd x dv
 
 def ProjectNN(vt1,W1,b1): #NN to project the outputs to Fourier layers to the solution
 #vt1 is of dimension s1 x s2 x s3 x ... x sd x dv
-#W1 is a vector of length dv (for one dependent variable) 
+#W1 is a vector of length dv (for one dependent variable)
 #b1 is a constant
     return jnp.dot(vt1,W1)+b1 #shape s1 x s2 x s3 x ... x sd
 
 def FastFT(vt1):#Fast Fourier transform
 #vt1 is of dimensions s1 x s2 x s3 x ... x sd x dv
     '''For 2d Domain -----'''
-    f=jnp.fft.fftn(vt1,s=(12,12),axes=(0,1))
+    f=jnp.fft.fftn(vt1,axes=(0,1))
+    f1=f[:6,:6]
     ''' ------------------'''
-    return f #each with dimensions s1 x s2 x s3 x ... x sd x dv
+    return f1 #each with dimensions kmax1 x kmax2 x kmax3 x ... x kmaxd x dv
 def InvFastFT(Fvt1):#Inverse Fast Fourier transform
 #pointwise evaluation
-#Fvt1 is of dimensions s1 x s2 x s3 x ... x sd x dv
+#Fvt1 is of dimensions kmax1 x kmax2 x kmax3 x ... x kmaxd x dv
+
     '''For 2d Domain -----'''
-    f=jnp.fft.ifftn(Fvt1,s=(33,27),axes=(0,1))
+    f=jnp.fft.ifftn(Fvt1,s=(43,27),axes=(0,1))
     ''' ------------------'''
     return f #dimension s1 x s2 x s3 x ... x sd x dv
 
-def FourierLayer(vt1,W1,kappa1): 
+def FourierLayer(vt1,W1,kappa1):
 #W1 is of size dv x dv
 #vt1 is of size  s1 x s2 x s3 x ... x sd x dv
 #kappa1 is of size s1 x s2 x s3 x ... x sd x dv x dv
-    ftemp=FastFT(vt1) 
+    ftemp=FastFT(vt1)
     '''For 2d Domain -----'''
     Rphi=FastFT(kappa1)
-    RF = jnp.einsum('abc,abcd->abd',ftemp,Rphi) 
+    RF = jnp.einsum('abc,abcd->abd',ftemp,Rphi)
     ''' ------------------'''
     kernelpart=jnp.real(InvFastFT(RF))
-    act_arg=jnp.dot(vt1,W1)+kernelpart 
+    act_arg=jnp.dot(vt1,W1)+kernelpart
     return actv(act_arg) #dimension s1 x s2 x s3 x ... x sd x dv
 
-def FourierLayerR(vt1,W1,Rphi1): 
+def FourierLayerR(vt1,W1,Rphi1):
 #W1 is of size dv x dv
 #vt1 is of size  s1 x s2 x s3 x ... x sd x dv
 #Rphi1 is of size kmax1 x kmax2 x kmax3 x ... x kmaxd x dv x dv
     Rphi2=(Rphi1+jnp.conjugate(jnp.flip(Rphi1,axis=(0,1))))/2.0
-    ftemp=FastFT(vt1) 
+    ftemp=FastFT(vt1)
     '''For 2d Domain -----'''
     #Rphi=FastFT(kappa1)
-    RF = jnp.einsum('abc,abcd->abd',ftemp,Rphi2) 
+    RF = jnp.einsum('abc,abcd->abd',ftemp,Rphi2)
     ''' ------------------'''
     kernelpart=jnp.real(InvFastFT(RF))
-    act_arg=jnp.dot(vt1,W1)+kernelpart 
+    act_arg=jnp.dot(vt1,W1)+kernelpart
     return actv(act_arg) #dimension s1 x s2 x s3 x ... x sd x dv
 
-def OutputNN(params1,avs1): #NN output given input 
+def OutputNN(params1,avs1): #NN output given input
     W0,b0=params1[0]
     vt=shallowNN(avs1,W0,b0)
     for w,kapv in params1[1:-1]:
@@ -157,7 +161,7 @@ def CostF(u,avs1,dx1,dt1,padM):
     ''' ------------------'''
     dudx=jnp.gradient(u,dx1,axis=0)
     dudt=jnp.gradient(u,dt1,axis=1)
-    cf=(1e2*jnp.sum((abs(avs1[:,:,0]*dudx+dudt))*padM)*dx1*dt1+200*jnp.sum(((u[:,0]-avs1[:,0,1])**2)*padM[:,0])*dx1)
+    cf=10*jnp.sum((abs(avs1[:,:,0]*dudx+dudt))*padM)*dx1*dt1+50*jnp.sum(((u[:,0]-avs1[:,0,1])**2)*padM[:,0])*dx1
     #cf=jnp.sum((avs1[:,:,0]-dudt)**2)*dx1*dt1+jnp.sum((u[:,0]-gauss(xs1,0.5,0.08))**2)*dx1
     return cf
 def TotalCost1(params1,avlist,dx1,dt1):
@@ -182,5 +186,4 @@ def update(params1,alist1,dx1,dt1,step_size,padM):
     grads=grad(TotalCost)(params1,alist1,dx1,dt1,padM)
     return [(w - step_size * dw, b - step_size * db)
           for (w, b), (dw, db) in zip(params1, grads)]
-
 
