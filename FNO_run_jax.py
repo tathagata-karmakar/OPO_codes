@@ -32,8 +32,8 @@ kmax=6
 s1=43
 s2=27
 '''Padding Lengths'''
-s1p=5
-s2p=5
+s1p=6
+s2p=6
 '''---------------'''
 Nvars=1+dv*(da+2)+4*s1*s2*dv+4*kmax*kmax*dv*dv
 #NT=20
@@ -54,6 +54,7 @@ i_seed=np.random.randint(0,1000)
 i_seed=483
 ks=np.arange(0,kmax)
 params=init_params(s1,s2,kmax,kmax,da,dv,random.PRNGKey(i_seed))
+#params=params3
 avalue=0.2
 avs=np.linspace(0.01,1,5)
 mu=0.5
@@ -83,49 +84,47 @@ trun=tfinish-tstart
 print(trun,cost)
 l0=1e-3
 step_size=l0
-num_epochs=3000
-
+num_epochs=6000
 fig, axs = plt.subplots(2,1,sharex='all')
-#ax=fig.add_subplot(111)
+paramsA=params_toAdam(params)
+
+tempindex=250
 
 
+opt=optax.adam(step_size)
+stime=time.time()
+solver=OptaxSolver(opt=opt, fun=TotalCostAdam,maxiter=num_epochs,tol=1e-4)
+res=solver.run(paramsA,alist,dx,dt,padmatrix)
+ftime=time.time()
+print("Adam time :", ftime-stime)
+paramsf,state=res
+
+u=OutputNNAdam(paramsf,alist[0])
+u1=OutputNNAdam(paramsf,alist[tempindex])
+'''
 costlist=np.zeros(num_epochs)
 Full_stime=time.time()
 for epoch in  range(num_epochs):
     stime=time.time()
-    if epoch<300:
-        step_size=l0/10
-    #step_size=((10.0)**(epoch//500))*l0
+    if(epoch<300):
+      step_size=l0/10
+    #elif(epoch>800):
+    #  step_size=l0*10.0
+    #step_size=(10*(epoch//500)+1)*l0
     #if (epoch>600):
      #  step_size=10.*l0
     #elif (epoch>400):
      #  step_size=1e4*l0
     params=update(params,alist,dx,dt,step_size,padmatrix)
     epoch_time=time.time()-stime
-    train_acc = TotalCost(params,alist,dx,dt,padmatrix)
-    costlist[epoch]=train_acc
-    #test_acc = accuracy(params, test_images, test_labels)
-    print("Epoch {} in {:0.2f} sec".format(epoch, epoch_time))
-    print("Total cost {}".format(train_acc))
-    #print("Test set accuracy {}".format(test_acc))
+    #train_acc = TotalCost(params,alist,dx,dt,padmatrix)
+    #costlist[epoch]=train_acc
+    #print("Epoch {} in {:0.2f} sec".format(epoch, epoch_time))
+    #print("Total cost {}".format(train_acc))
 print("Manual time : ", time.time()-Full_stime)
 u=OutputNN(params,alist[0])
-
+u1=OutputNN(params,alist[tempindex])
 '''
-opt=optax.adam(step_size)
-stime=time.time()
-solver=OptaxSolver(opt=opt, fun=TotalCost,maxiter=num_epochs)
-res=solver.run(params,alist,dx,dt,padmatrix)
-ftime=time.time()
-print("Adam time :", ftime-stime)
-paramsf,state=res
-
-u=OutputNN(paramsf,alist[0])
-plt.plot(xs[:-s1p],u[:-s1p,0],'k')
-plt.plot(xs[:-s1p],u[:-s1p,-s2p-1],'b--')
-plt.plot(xs[:-s1p],alist[0][:-s1p,0,1],'g')
-'''
-
 lwd=3
 
 axs[0].plot(xs[:-s1p],u[:-s1p,0],'r',label='$u(t=0)$',linewidth=lwd)
@@ -134,8 +133,7 @@ axs[0].plot(xs[:-s1p],alist[0][:-s1p,0,1],'g',label='Initial',linewidth=lwd)
 
 
 
-tempindex=250
-u1=OutputNN(params,alist[tempindex])
+
 axs[1].plot(xs[:-s1p],u1[:-s1p,0],'r',label='$u(t=0)$',linewidth=lwd)
 axs[1].plot(xs[:-s1p],u1[:-s1p,-s2p-1],'b--',label='$u(t=1)$',linewidth=lwd)
 axs[1].plot(xs[:-s1p],alist[tempindex][:-s1p,0,1],'g',label='Initial',linewidth=lwd)
@@ -147,5 +145,5 @@ axs[0].set_ylabel('$u$',fontsize=20)
 axs[0].yaxis.set_label_coords(-.15, -.15)
 axs[0].legend(loc=1,fontsize=15)
 plt.subplots_adjust(wspace=0.05, hspace=0.1)
-#fig.savefig('/Users/t_karmakar/Library/CloudStorage/Box-Box/Research/NTTResearch/Plots/Transport.png',bbox_inches='tight')
+fig.savefig('/Users/t_karmakar/Library/CloudStorage/Box-Box/Research/NTTResearch/Plots/Transport.png',bbox_inches='tight')
 print(i_seed)
