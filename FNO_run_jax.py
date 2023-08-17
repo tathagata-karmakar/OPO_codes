@@ -19,7 +19,9 @@ from matplotlib import rc
 from pylab import rcParams
 from FNO_structure_jax import *
 os.environ["PATH"] += os.pathsep + '/Library/TeX/texbin'
+rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
 rc('text',usetex=True)
+rcParams['figure.figsize']=6,6
 from jaxopt import OptaxSolver
 import optax
 
@@ -36,12 +38,16 @@ s2p=5
 Nvars=1+dv*(da+2)+4*s1*s2*dv+4*kmax*kmax*dv*dv
 #NT=20
 dx=0.01
-xs=np.linspace(-2,2,s1-s1p)
-ts=np.linspace(0,1,s2-s2p)
+xi=-2
+xf=2
+ti=0
+tf=1
+xs=np.linspace(xi,xf,s1-s1p)
+ts=np.linspace(ti,tf,s2-s2p)
 dx=xs[1]-xs[0]
 dt=ts[1]-ts[0]
-ts=np.linspace(0,dt*(s2-1),s2)
-xs=np.linspace(-2,dx*(s1-1),s1)
+ts=np.linspace(ti,ti+dt*(s2-1),s2)
+xs=np.linspace(xi,xi+dx*(s1-1),s1)
 
 xv,tv=np.meshgrid(xs,ts,indexing='ij')
 i_seed=np.random.randint(0,1000)
@@ -77,10 +83,10 @@ trun=tfinish-tstart
 print(trun,cost)
 l0=1e-4
 step_size=l0
-num_epochs=3
+num_epochs=2
 
-fig=plt.figure()
-ax=fig.add_subplot(111)
+fig, axs = plt.subplots(2,1,sharex='all')
+#ax=fig.add_subplot(111)
 
 '''
 opt=optax.adam(step_size)
@@ -116,9 +122,26 @@ for epoch in  range(num_epochs):
 print("Manual time : ", time.time()-Full_stime)
 u=OutputNN(params,alist[0])
 
-ax.plot(xs[:-s1p],u[:-s1p,0],'r')
-ax.plot(xs[:-s1p],u[:-s1p,-s2p-1],'b--')
+lwd=3
 
-ax.plot(xs[:-s1p],alist[0][:-s1p,0,1],'g')
-fig.savefig('/Users/t_karmakar/Library/CloudStorage/Box-Box/Research/Fluxon/plots/HM_diagram.png',bbox_inches='tight')
+axs[0].plot(xs[:-s1p],u[:-s1p,0],'r',label='u(0)',linewidth=lwd)
+axs[0].plot(xs[:-s1p],u[:-s1p,-s2p-1],'b--',label='u(t=1)',linewidth=lwd)
+axs[0].plot(xs[:-s1p],alist[0][:-s1p,0,1],'g',label='Initial',linewidth=lwd)
+
+
+
+tempindex=250
+u1=OutputNN(params,alist[tempindex])
+axs[1].plot(xs[:-s1p],u1[:-s1p,0],'r',label='u(0)',linewidth=lwd)
+axs[1].plot(xs[:-s1p],u1[:-s1p,-s2p-1],'b--',label='u(t=1)',linewidth=lwd)
+axs[1].plot(xs[:-s1p],alist[tempindex][:-s1p,0,1],'g',label='Initial',linewidth=lwd)
+
+axs[1].tick_params(labelsize=18)
+axs[0].tick_params(labelsize=18)
+axs[1].set_xlabel('x',fontsize=20)
+axs[0].set_ylabel('u',fontsize=20)
+axs[0].yaxis.set_label_coords(-.15, -.15)
+axs[0].legend(loc=1,fontsize=15)
+plt.subplots_adjust(wspace=0.05, hspace=0.1)
+fig.savefig('/Users/t_karmakar/Library/CloudStorage/Box-Box/Research/NTTResearch/Plots/Transport.png',bbox_inches='tight')
 print(i_seed)
