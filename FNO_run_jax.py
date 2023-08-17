@@ -77,9 +77,12 @@ trun=tfinish-tstart
 print(trun,cost)
 l0=1e-4
 step_size=l0
-num_epochs=3000
+num_epochs=3
 
+fig=plt.figure()
+ax=fig.add_subplot(111)
 
+'''
 opt=optax.adam(step_size)
 stime=time.time()
 solver=OptaxSolver(opt=opt, fun=TotalCost,maxiter=num_epochs)
@@ -112,9 +115,10 @@ for epoch in  range(num_epochs):
     #print("Test set accuracy {}".format(test_acc))
 print("Manual time : ", time.time()-Full_stime)
 u=OutputNN(params,alist[0])
-plt.plot(xs[:-s1p],u[:-s1p,0],'r')
-plt.plot(xs[:-s1p],u[:-s1p,-s2p-1],'b--')
 
-plt.plot(xs[:-s1p],alist[0][:-s1p,0,1],'g')
+ax.plot(xs[:-s1p],u[:-s1p,0],'r')
+ax.plot(xs[:-s1p],u[:-s1p,-s2p-1],'b--')
+
+ax.plot(xs[:-s1p],alist[0][:-s1p,0,1],'g')
+fig.savefig('/Users/t_karmakar/Library/CloudStorage/Box-Box/Research/Fluxon/plots/HM_diagram.png',bbox_inches='tight')
 print(i_seed)
-'''
