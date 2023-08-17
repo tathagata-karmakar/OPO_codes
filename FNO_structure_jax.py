@@ -43,6 +43,7 @@ from typing import Iterable
 
 
 
+
 '''
 Equation parameters
 '''
@@ -59,7 +60,7 @@ def shallow_initial(da1,dv1,key,scale=1e-2):
     return scale*random.normal(w_key,(da1,dv1)), scale*random.normal(b_key,(dv1,))
 
 '''For 2d Domain -----'''
-def Fourier_initial(k1,k2,dv1,key,scale=1e-2):
+def Fourier_initial(k1,k2,dv1,key,scale=1e1/7):
     ''' ------------------'''
     #initialize Fourier layer parameters
     kappa_key,w_key=random.split(key)
@@ -71,7 +72,7 @@ def project_initial(dv1,key,scale=1e-2):
     return scale*random.normal(w_key,(dv1,)), scale*random.normal(b_key)
 
 '''For 2d Domain -----'''
-def init_params(s1,s2,k1,k2,da1,dv1,key,scale=1e1/7):
+def init_params(s1,s2,k1,k2,da1,dv1,key,scale=1e0):
     ''' ------------------'''
     keys=random.split(key,3)
     params=[]
@@ -80,6 +81,26 @@ def init_params(s1,s2,k1,k2,da1,dv1,key,scale=1e1/7):
         params.append(Fourier_initial(k1,k2,dv1,keys[i+1],scale))
     params.append(project_initial(dv1,keys[5],scale))
     return params
+
+def params_toAdam(params1):
+  parout=[]
+  #W0,b0=params[0]
+  parout.append(params1[0])
+  for w,Rphi in params1[1:-1]:
+      Rphir,Rphii=jnp.real(Rphi),jnp.imag(Rphi)
+      parout.append((w,Rphir,Rphii))
+  parout.append(params1[-1])
+  return parout
+
+def params_fromAdam(params1):
+  parout=[]
+  #W0,b0=params[0]
+  parout.append(params1[0])
+  for w,Rphir,Rphii in params1[1:-1]:
+      Rphi = Rphir+1j*Rphii
+      parout.append((w,Rphi))
+  parout.append(params1[-1])
+  return parout
 
 '''
 Neural operator evaluation
@@ -141,7 +162,23 @@ def FourierLayerR(vt1,W1,Rphi1):
     act_arg=jnp.dot(vt1,W1)+kernelpart
     return actv(act_arg) #dimension s1 x s2 x s3 x ... x sd x dv
 
-def OutputNN(params1,avs1): #NN output given input
+def FourierLayerAdam(vt1,W1,Rphir,Rphii):
+#W1 is of size dv x dv
+#vt1 is of size  s1 x s2 x s3 x ... x sd x dv
+#Rphir is of size kmax1 x kmax2 x kmax3 x ... x kmaxd x dv x dv
+#Rphii is of size kmax1 x kmax2 x kmax3 x ... x kmaxd x dv x dv
+    Rphir=(Rphir+jnp.flip(Rphir,axis=(0,1)))/2.0
+    Rphii=(Rphii-jnp.flip(Rphii,axis=(0,1)))/2.0
+    ftemp=FastFT(vt1)
+    '''For 2d Domain -----'''
+    #Rphi=FastFT(kappa1)
+    RF = jnp.einsum('abc,abcd->abd',ftemp,Rphir+1j*Rphii)
+    ''' ------------------'''
+    kernelpart=jnp.real(InvFastFT(RF))
+    act_arg=jnp.dot(vt1,W1)+kernelpart
+    return actv(act_arg) #dimension s1 x s2 x s3 x ... x sd x dv
+
+def OutputNN(params1,avs1): #NO output given input
     W0,b0=params1[0]
     vt=shallowNN(avs1,W0,b0)
     for w,kapv in params1[1:-1]:
@@ -149,6 +186,15 @@ def OutputNN(params1,avs1): #NN output given input
     w_last,b_last=params1[-1]
     u=ProjectNN(vt,w_last,b_last)
     return u #dimension s1 x s2 x s3 x ... x sd
+
+def OutputNNAdam(params1,avs1): #NO output given adam input
+    W0,b0=params1[0]
+    vt=shallowNN(avs1,W0,b0)
+    for w,Rphir,Rphii in params1[1:-1]:
+        vt=FourierLayerAdam(vt,w,Rphir,Rphii)
+    w_last,b_last=params1[-1]
+    u=ProjectNN(vt,w_last,b_last)
+    return u   
 
 '''
 Cost function calculation
@@ -161,8 +207,7 @@ def CostF(u,avs1,dx1,dt1,padM):
     ''' ------------------'''
     dudx=jnp.gradient(u,dx1,axis=0)
     dudt=jnp.gradient(u,dt1,axis=1)
-    cf=10*jnp.sum((abs(avs1[:,:,0]*dudx+dudt))*padM)*dx1*dt1+50*jnp.sum(((u[:,0]-avs1[:,0,1])**2)*padM[:,0])*dx1
-    #cf=jnp.sum((avs1[:,:,0]-dudt)**2)*dx1*dt1+jnp.sum((u[:,0]-gauss(xs1,0.5,0.08))**2)*dx1
+    cf=(10.*jnp.sum((abs(avs1[:,:,0]*dudx+dudt))*padM)*dx1*dt1+1000*jnp.sum(((u[:,0]-avs1[:,0,1])**2)*padM[:,0])*dx1)
     return cf
 def TotalCost1(params1,avlist,dx1,dt1):
     cost=0
@@ -179,6 +224,16 @@ batch_cost=vmap(CostCal,in_axes=[None,0,None,None,None])
 
 def TotalCost(params1,avlist,dx1,dt1,padM):
     costs=batch_cost(params1,avlist,dx1,dt1,padM)
+    return jnp.sum(costs)/len(avlist)
+
+def CostCalAdam(params1,avs1,dx1,dt1,padM):
+    u=OutputNNAdam(params1, avs1)
+    cost=CostF(u,avs1,dx1,dt1,padM)
+    return cost
+batch_costAdam=vmap(CostCalAdam,in_axes=[None,0,None,None,None])
+
+def TotalCostAdam(params1,avlist,dx1,dt1,padM):
+    costs=batch_costAdam(params1,avlist,dx1,dt1,padM)
     return jnp.sum(costs)/len(avlist)
 
 @jit

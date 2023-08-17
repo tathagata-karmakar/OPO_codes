@@ -81,31 +81,20 @@ tfinish=time.time()
 trun=tfinish-tstart
 
 print(trun,cost)
-l0=1e-4
+l0=1e-3
 step_size=l0
-num_epochs=2
+num_epochs=3000
 
 fig, axs = plt.subplots(2,1,sharex='all')
 #ax=fig.add_subplot(111)
 
-'''
-opt=optax.adam(step_size)
-stime=time.time()
-solver=OptaxSolver(opt=opt, fun=TotalCost,maxiter=num_epochs)
-res=solver.run(params,alist,dx,dt,padmatrix)
-ftime=time.time()
-print("Adam time :", ftime-stime)
-paramsf,state=res
 
-u=OutputNN(paramsf,alist[0])
-plt.plot(xs[:-s1p],u[:-s1p,0],'k')
-plt.plot(xs[:-s1p],u[:-s1p,-s2p-1],'b--')
-plt.plot(xs[:-s1p],alist[0][:-s1p,0,1],'g')
-'''
 costlist=np.zeros(num_epochs)
 Full_stime=time.time()
 for epoch in  range(num_epochs):
     stime=time.time()
+    if epoch<300:
+        step_size=l0/10
     #step_size=((10.0)**(epoch//500))*l0
     #if (epoch>600):
      #  step_size=10.*l0
@@ -121,6 +110,21 @@ for epoch in  range(num_epochs):
     #print("Test set accuracy {}".format(test_acc))
 print("Manual time : ", time.time()-Full_stime)
 u=OutputNN(params,alist[0])
+
+'''
+opt=optax.adam(step_size)
+stime=time.time()
+solver=OptaxSolver(opt=opt, fun=TotalCost,maxiter=num_epochs)
+res=solver.run(params,alist,dx,dt,padmatrix)
+ftime=time.time()
+print("Adam time :", ftime-stime)
+paramsf,state=res
+
+u=OutputNN(paramsf,alist[0])
+plt.plot(xs[:-s1p],u[:-s1p,0],'k')
+plt.plot(xs[:-s1p],u[:-s1p,-s2p-1],'b--')
+plt.plot(xs[:-s1p],alist[0][:-s1p,0,1],'g')
+'''
 
 lwd=3
 
