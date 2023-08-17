@@ -124,24 +124,24 @@ u=OutputNN(params,alist[0])
 
 lwd=3
 
-axs[0].plot(xs[:-s1p],u[:-s1p,0],'r',label='u(0)',linewidth=lwd)
-axs[0].plot(xs[:-s1p],u[:-s1p,-s2p-1],'b--',label='u(t=1)',linewidth=lwd)
+axs[0].plot(xs[:-s1p],u[:-s1p,0],'r',label='$u(t=0)$',linewidth=lwd)
+axs[0].plot(xs[:-s1p],u[:-s1p,-s2p-1],'b--',label='$u(t=1)$',linewidth=lwd)
 axs[0].plot(xs[:-s1p],alist[0][:-s1p,0,1],'g',label='Initial',linewidth=lwd)
 
 
 
 tempindex=250
 u1=OutputNN(params,alist[tempindex])
-axs[1].plot(xs[:-s1p],u1[:-s1p,0],'r',label='u(0)',linewidth=lwd)
-axs[1].plot(xs[:-s1p],u1[:-s1p,-s2p-1],'b--',label='u(t=1)',linewidth=lwd)
+axs[1].plot(xs[:-s1p],u1[:-s1p,0],'r',label='$u(t=0)$',linewidth=lwd)
+axs[1].plot(xs[:-s1p],u1[:-s1p,-s2p-1],'b--',label='$u(t=1)$',linewidth=lwd)
 axs[1].plot(xs[:-s1p],alist[tempindex][:-s1p,0,1],'g',label='Initial',linewidth=lwd)
 
 axs[1].tick_params(labelsize=18)
 axs[0].tick_params(labelsize=18)
-axs[1].set_xlabel('x',fontsize=20)
-axs[0].set_ylabel('u',fontsize=20)
+axs[1].set_xlabel('$x$',fontsize=20)
+axs[0].set_ylabel('$u$',fontsize=20)
 axs[0].yaxis.set_label_coords(-.15, -.15)
 axs[0].legend(loc=1,fontsize=15)
 plt.subplots_adjust(wspace=0.05, hspace=0.1)
-fig.savefig('/Users/t_karmakar/Library/CloudStorage/Box-Box/Research/NTTResearch/Plots/Transport.png',bbox_inches='tight')
+#fig.savefig('/Users/t_karmakar/Library/CloudStorage/Box-Box/Research/NTTResearch/Plots/Transport.png',bbox_inches='tight')
 print(i_seed)
