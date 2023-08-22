@@ -41,9 +41,6 @@ from typing import Iterable
 #The dimensions have discretization s1, s2, ... , sd respectively  
 #s1 x s2 x s3 x .. x sd = n
 
-
-
-
 '''
 Equation parameters
 '''
@@ -83,24 +80,24 @@ def init_params(s1,s2,k1,k2,da1,dv1,key,scale=1e0):
     return params
 
 def params_toAdam(params1):
-  parout=[]
-  #W0,b0=params[0]
-  parout.append(params1[0])
-  for w,Rphi in params1[1:-1]:
-      Rphir,Rphii=jnp.real(Rphi),jnp.imag(Rphi)
-      parout.append((w,Rphir,Rphii))
-  parout.append(params1[-1])
-  return parout
+    parout=[]
+    #W0,b0=params[0]
+    parout.append(params1[0])
+    for w,Rphi in params1[1:-1]:
+        Rphir,Rphii=jnp.real(Rphi),jnp.imag(Rphi)
+        parout.append((w,Rphir,Rphii))
+    parout.append(params1[-1])
+    return parout
 
 def params_fromAdam(params1):
-  parout=[]
-  #W0,b0=params[0]
-  parout.append(params1[0])
-  for w,Rphir,Rphii in params1[1:-1]:
-      Rphi = Rphir+1j*Rphii
-      parout.append((w,Rphi))
-  parout.append(params1[-1])
-  return parout
+    parout=[]
+    #W0,b0=params[0]
+    parout.append(params1[0])
+    for w,Rphir,Rphii in params1[1:-1]:
+        Rphi = Rphir+1j*Rphii
+        parout.append((w,Rphi))
+    parout.append(params1[-1])
+    return parout
 
 '''
 Neural operator evaluation

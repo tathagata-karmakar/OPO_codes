@@ -87,9 +87,7 @@ step_size=l0
 num_epochs=6000
 fig, axs = plt.subplots(2,1,sharex='all')
 paramsA=params_toAdam(params)
-
 tempindex=250
-
 
 opt=optax.adam(step_size)
 stime=time.time()
