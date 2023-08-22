@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri Jul 28 14:32:43 2023
+Created on Tue Aug 22 14:16:10 2023
 
 @author: t_karmakar
 """
@@ -17,6 +17,7 @@ from scipy.integrate import simps as intg
 from matplotlib import rc
 from pylab import rcParams
 from FNO_structure_jax import *
+from FNO_structure3D import *
 os.environ["PATH"] += os.pathsep + '/Library/TeX/texbin'
 rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
 rc('text',usetex=True)
