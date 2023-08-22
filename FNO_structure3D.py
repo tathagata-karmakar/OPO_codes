@@ -42,9 +42,7 @@ from FNO_structure_jax import *
 #The dimensions have discretization s1, s2, ... , sd respectively  
 #s1 x s2 x s3 x .. x sd = n
 
-'''
-Equation parameters
-'''
+
 
 '''
 Initialization
@@ -149,8 +147,9 @@ def CostF3D(u,avs1,dx1,dp1,dt1,padM):
     dudx=jnp.gradient(u,dx1,axis=0)
     dudp=jnp.gradient(u,dp1,axis=1)
     dudt=jnp.gradient(u,dt1,axis=2)
+    u2=u*padM
     #Evolution + I.C. + Normalization
-    cf=(10.*jnp.sum((abs(dudt-avs1[:,:,:,0]*dudp+avs1[:,:,:,1]*dudx))*padM)*dx1*dp1*dt1+1000*jnp.sum(((u[:,:,0]-avs1[:,:,0,1])**2)*padM[:,0])*dx1*dp1)+5*jnp.sum(abs(jnp.sum(u,axis=(0,1))*dt1-1))
+    cf=(10.*jnp.sum((abs(dudt-avs1[:,:,:,0]*dudp+avs1[:,:,:,1]*dudx))*padM)*dx1*dp1*dt1+1000*jnp.sum((u2[:,:,0]-avs1[:,:,0,1])**2)*dx1*dp1)+5*jnp.sum(abs(jnp.sum(u2,axis=(0,1))*dt1-1))
     return cf
 
 def CostCal3D(params1,avs1,dx1,dp1,dt1,padM):

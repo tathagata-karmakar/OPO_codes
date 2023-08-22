@@ -27,44 +27,54 @@ import optax
 
 
 dv=4
-da=2
+da=3
 kmax=6
-s1=43
-s2=27
-'''Padding Lengths'''
-s1p=6
-s2p=6
+s1=33
+s2=33
+s3=27
+'''Padding Lengths in each direction'''
+'''Padding is symmetric wrt x and p'''
+s1p=4
+s2p=4
+s3p=6
 '''---------------'''
-Nvars=1+dv*(da+2)+4*s1*s2*dv+4*kmax*kmax*dv*dv
+Nvars=1+dv*(da+2)+4*s1*s2*s3*dv+4*kmax*kmax*kmax*dv*dv
 #NT=20
 dx=0.01
-xi=-2
-xf=2
+xi=-10
+xf=10
+pi=-10
+pf=10
 ti=0
 tf=1
-xs=np.linspace(xi,xf,s1-s1p)
-ts=np.linspace(ti,tf,s2-s2p)
+xs=np.linspace(xi,xf,s1-2*s1p)
+ps=np.linspace(pi,pf,s2-2*s2p)
+ts=np.linspace(ti,tf,s3-s3p)
 dx=xs[1]-xs[0]
+dp=ps[1]-ps[0]
 dt=ts[1]-ts[0]
-ts=np.linspace(ti,ti+dt*(s2-1),s2)
-xs=np.linspace(xi,xi+dx*(s1-1),s1)
 
-xv,tv=np.meshgrid(xs,ts,indexing='ij')
+xs=np.linspace(xi-dx*(s1p),xf+dx*(s1p),s1)
+ps=np.linspace(pi-dp*(s2p),pf+dp*(s2p),s2)
+ts=np.linspace(ti,ti+dt*(s3-1),s3)
+
+xv,pv,tv=np.meshgrid(xs,ps,ts,indexing='ij')
+
 i_seed=np.random.randint(0,1000)
 i_seed=483
 ks=np.arange(0,kmax)
-params=init_params(kmax,kmax,da,dv,random.PRNGKey(i_seed))
+params=init_params3D(kmax,kmax,kmax,da,dv,random.PRNGKey(i_seed))
 #params=params3
-avalue=0.2
+
 avs=np.linspace(0.01,1,5)
 mu=0.5
 sigma=0.08
 sigmas=np.linspace(0.08,1,300)
 alist=[]
-padmatrix=np.zeros((s1,s2))
-fpadmat=np.zeros((s1,s2,dv,dv))
-padmatrix[:-s1p,:-s2p]=np.ones((s1-s1p,s2-s2p))
-fpadmat[:kmax,:kmax,:,:]=np.ones((kmax,kmax,dv,dv))
+padmatrix=np.zeros((s1,s2,s3))
+#fpadmat=np.zeros((s1,s2,dv,dv))
+padmatrix[s1p:-s1p,s2p:-s2p,:-s3p]=np.ones((s1-2*s1p,s2-2*s2p,s3-s3p))
+'''
 for av in avs:
     for sigmav in sigmas:
         #print(sigmav)
@@ -100,6 +110,8 @@ paramsf,state=res
 u=OutputNNAdam(paramsf,alist[0])
 u1=OutputNNAdam(paramsf,alist[tempindex])
 '''
+
+'''
 costlist=np.zeros(num_epochs)
 Full_stime=time.time()
 for epoch in  range(num_epochs):
@@ -123,6 +135,7 @@ print("Manual time : ", time.time()-Full_stime)
 u=OutputNN(params,alist[0])
 u1=OutputNN(params,alist[tempindex])
 '''
+'''
 lwd=3
 
 axs[0].plot(xs[:-s1p],u[:-s1p,0],'r',label='$u(t=0)$',linewidth=lwd)
@@ -145,3 +158,4 @@ axs[0].legend(loc=1,fontsize=15)
 plt.subplots_adjust(wspace=0.05, hspace=0.1)
 fig.savefig('/Users/t_karmakar/Library/CloudStorage/Box-Box/Research/NTTResearch/Plots/Transport.png',bbox_inches='tight')
 print(i_seed)
+'''
