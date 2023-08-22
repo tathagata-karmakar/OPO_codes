@@ -53,7 +53,7 @@ xv,tv=np.meshgrid(xs,ts,indexing='ij')
 i_seed=np.random.randint(0,1000)
 i_seed=483
 ks=np.arange(0,kmax)
-params=init_params(s1,s2,kmax,kmax,da,dv,random.PRNGKey(i_seed))
+params=init_params(kmax,kmax,da,dv,random.PRNGKey(i_seed))
 #params=params3
 avalue=0.2
 avs=np.linspace(0.01,1,5)
@@ -84,7 +84,7 @@ trun=tfinish-tstart
 print(trun,cost)
 l0=1e-3
 step_size=l0
-num_epochs=6000
+num_epochs=1
 fig, axs = plt.subplots(2,1,sharex='all')
 paramsA=params_toAdam(params)
 tempindex=250

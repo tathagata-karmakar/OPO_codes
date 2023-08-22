@@ -68,14 +68,14 @@ def project_initial(dv1,key,scale=1e-2):
     w_key,b_key=random.split(key)
     return scale*random.normal(w_key,(dv1,)), scale*random.normal(b_key)
 
-'''For 2d Domain -----'''
-def init_params(s1,s2,k1,k2,da1,dv1,key,scale=1e0):
+'''For 3d Domain -----'''
+def init_params(k1,k2,k3,da1,dv1,key,scale=1e0):
     ''' ------------------'''
     keys=random.split(key,3)
     params=[]
     params.append(shallow_initial(da1,dv1,keys[0],scale))
     for i in  range(4):
-        params.append(Fourier_initial(k1,k2,dv1,keys[i+1],scale))
+        params.append(Fourier_initial(k1,k2,k3,dv1,keys[i+1],scale))
     params.append(project_initial(dv1,keys[5],scale))
     return params
 

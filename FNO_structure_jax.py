@@ -69,7 +69,7 @@ def project_initial(dv1,key,scale=1e-2):
     return scale*random.normal(w_key,(dv1,)), scale*random.normal(b_key)
 
 '''For 2d Domain -----'''
-def init_params(s1,s2,k1,k2,da1,dv1,key,scale=1e0):
+def init_params(k1,k2,da1,dv1,key,scale=1e0):
     ''' ------------------'''
     keys=random.split(key,3)
     params=[]
