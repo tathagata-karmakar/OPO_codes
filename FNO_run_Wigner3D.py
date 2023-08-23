@@ -173,7 +173,7 @@ print(i_seed)
 '''
 
 #outfile=TemporaryFile()
-fname='/Users/t_karmakar/Library/CloudStorage/Box-Box/Research/NTTResearch/OPO_codes/data1'
+fname='/Users/t_karmakar/Library/CloudStorage/Box-Box/Research/NTTResearch/OPO_codes/Data/data1'
 np.savez(fname+'.npz',dv=dv,da=da,kmax1=kmax1,kmax2=kmax2,kmax3=kmax3,s1=s1,s2=s2,s3=s3,s1p=s1p,s2p=s2p,s3p=s3p,xs=xs,ps=ps,ts=ts,dx=dx,dp=dp,dt=dt,alist=alist,i_seed=i_seed,padmatrix=padmatrix,num_epochs=num_epochs,step_size=step_size)
 with open(fname+'.pickle','wb') as file:
     pickle.dump(params,file)

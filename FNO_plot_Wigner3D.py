@@ -26,7 +26,7 @@ import optax
 from matplotlib import colors
 import pickle
 
-fname='/Users/t_karmakar/Library/CloudStorage/Box-Box/Research/NTTResearch/OPO_codes/data1'
+fname='/Users/t_karmakar/Library/CloudStorage/Box-Box/Research/NTTResearch/OPO_codes/Data/data2'
 npzfile=np.load(fname+'.npz')
 with open(fname+'.pickle','rb') as file:
     params=pickle.load(file)
@@ -43,10 +43,13 @@ ps=npzfile['ps']
 ts=npzfile['ts']
 xv,pv,tv=np.meshgrid(xs,ps,ts,indexing='ij')
 alist=npzfile['alist']
-tempindex=250
-tind=5
+tempindex=500
+tind=0
+
+
 
 u=OutputNN3D(params,alist[tempindex])
+u1=alist[tempindex][:,:,:,0]
 
 fig, axs = plt.subplots(2,1,sharex='all')
 lwd=3
@@ -58,6 +61,13 @@ divnorm=colors.TwoSlopeNorm(vmin=minu, vcenter=(maxu+minu)/2, vmax=maxu)
 im1=axs[0].contourf(xv[s1p:-s1p,s2p:-s2p,tind],pv[s1p:-s1p,s2p:-s2p,tind],u[s1p:-s1p,s2p:-s2p,tind],levels=8,cmap='RdBu', norm=divnorm)
 cb1=plt.colorbar(im1,ax=axs[0])
 cb1.ax.tick_params(labelsize=12)
+
+maxu1=np.max(u1[s1p:-s1p,s2p:-s2p,tind])
+minu1=np.min(u1[s1p:-s1p,s2p:-s2p,tind])
+divnorm=colors.TwoSlopeNorm(vmin=minu1, vcenter=(maxu1+minu1)/2, vmax=maxu1)
+im2=axs[1].contourf(xv[s1p:-s1p,s2p:-s2p,tind],pv[s1p:-s1p,s2p:-s2p,tind],u1[s1p:-s1p,s2p:-s2p,tind],levels=10,cmap='RdBu', norm=divnorm)
+cb2=plt.colorbar(im2,ax=axs[1])
+cb2.ax.tick_params(labelsize=12)
 
 axs[1].tick_params(labelsize=18)
 axs[0].tick_params(labelsize=18)
