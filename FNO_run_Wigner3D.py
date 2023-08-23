@@ -21,18 +21,20 @@ from FNO_structure3D import *
 os.environ["PATH"] += os.pathsep + '/Library/TeX/texbin'
 rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
 rc('text',usetex=True)
-rcParams['figure.figsize']=6,6
+#rcParams['figure.figsize']=6,6
 from jaxopt import OptaxSolver
 import optax
 from matplotlib import colors
 
 
-
 dv=4
 da=1
 kmax=6
-s1=27
-s2=27
+kmax1=kmax
+kmax2=kmax
+kmax3=kmax
+s1=29
+s2=29
 s3=21
 '''Padding Lengths in each direction'''
 '''Padding is symmetric wrt x and p'''
@@ -95,7 +97,7 @@ print(trun,cost)
 
 l0=1e-4
 step_size=l0
-num_epochs=3000
+num_epochs=1
 fig, axs = plt.subplots(2,1,sharex='all')
 paramsA=params_toAdam(params)
 tempindex=250
@@ -107,11 +109,11 @@ res=solver.run(paramsA,alist,dx,dp,dt,xv,pv,padmatrix)
 ftime=time.time()
 print("Adam time :", ftime-stime)
 paramsf,state=res
-
+params=params_fromAdam(paramsf)
 u=OutputNNAdam3D(paramsf,alist[0])
 u1=OutputNNAdam3D(paramsf,alist[tempindex])
-'''
 
+'''
 costlist=np.zeros(num_epochs)
 Full_stime=time.time()
 for epoch in  range(num_epochs):
@@ -135,6 +137,7 @@ print("Manual time : ", time.time()-Full_stime)
 u=OutputNN3D(params,alist[0])
 u1=OutputNN3D(params,alist[tempindex])
 '''
+'''
 lwd=3
 tind=5
 maxu=np.max(u[s1p:-s1p,s2p:-s2p,tind])
@@ -142,8 +145,15 @@ minu=np.min(u[s1p:-s1p,s2p:-s2p,tind])
 divnorm=colors.TwoSlopeNorm(vmin=minu, vcenter=(maxu+minu)/2, vmax=maxu)
 #pcolormesh(your_data, cmap="coolwarm",)
 im1=axs[0].contourf(xv[s1p:-s1p,s2p:-s2p,tind],pv[s1p:-s1p,s2p:-s2p,tind],u[s1p:-s1p,s2p:-s2p,tind],levels=8,cmap='RdBu', norm=divnorm)
-cb=plt.colorbar(im1,ax=axs[0])
-cb.ax.tick_params(labelsize=12)
+cb1=plt.colorbar(im1,ax=axs[0])
+cb1.ax.tick_params(labelsize=12)
+
+maxu1=np.max(u1[s1p:-s1p,s2p:-s2p,tind])
+minu1=np.min(u1[s1p:-s1p,s2p:-s2p,tind])
+divnorm=colors.TwoSlopeNorm(vmin=minu1, vcenter=(maxu1+minu1)/2, vmax=maxu1)
+im2=axs[1].contourf(xv[s1p:-s1p,s2p:-s2p,tind],pv[s1p:-s1p,s2p:-s2p,tind],u1[s1p:-s1p,s2p:-s2p,tind],levels=8,cmap='RdBu', norm=divnorm)
+cb2=plt.colorbar(im2,ax=axs[1])
+cb2.ax.tick_params(labelsize=12)
 
 
 axs[1].tick_params(labelsize=18)
@@ -151,9 +161,15 @@ axs[0].tick_params(labelsize=18)
 axs[1].set_xlabel('$x$',fontsize=20)
 axs[0].set_ylabel('$p$',fontsize=20)
 axs[0].yaxis.set_label_coords(-.15, -.15)
-axs[0].legend(loc=1,fontsize=15)
+#axs[0].legend(loc=1,fontsize=15)
 
 plt.subplots_adjust(wspace=0.05, hspace=0.1)
 #fig.savefig('/Users/t_karmakar/Library/CloudStorage/Box-Box/Research/NTTResearch/Plots/Wigner3D.png',bbox_inches='tight')
 print(i_seed)
+'''
+
+#outfile=TemporaryFile()
+fname='/Users/t_karmakar/Library/CloudStorage/Box-Box/Research/NTTResearch/OPO_codes/data1.npz'
+np.savez(fname,dv=dv,da=da,kmax1=kmax1,kmax2=kmax2,kmax3=kmax3,s1=s1,s2=s2,s3=s3,s1p=s1p,s2p=s2p,s3p=s3p,xs=xs,ps=ps,ts=ts,dx=dx,dp=dp,dt=dt,alist=alist,i_seed=i_seed,padmatrix=padmatrix,num_epochs=num_epochs,step_size=step_size,params=params)
+#_=outfile.seek(0)
 
