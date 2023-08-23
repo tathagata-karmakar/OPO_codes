@@ -25,6 +25,7 @@ rc('text',usetex=True)
 from jaxopt import OptaxSolver
 import optax
 from matplotlib import colors
+import pickle
 
 
 dv=4
@@ -101,7 +102,7 @@ num_epochs=1
 fig, axs = plt.subplots(2,1,sharex='all')
 paramsA=params_toAdam(params)
 tempindex=250
-
+'''
 opt=optax.adam(step_size)
 stime=time.time()
 solver=OptaxSolver(opt=opt, fun=TotalCostAdam3D,maxiter=num_epochs,tol=1e-4)
@@ -112,7 +113,7 @@ paramsf,state=res
 params=params_fromAdam(paramsf)
 u=OutputNNAdam3D(paramsf,alist[0])
 u1=OutputNNAdam3D(paramsf,alist[tempindex])
-
+'''
 '''
 costlist=np.zeros(num_epochs)
 Full_stime=time.time()
@@ -169,7 +170,10 @@ print(i_seed)
 '''
 
 #outfile=TemporaryFile()
-fname='/Users/t_karmakar/Library/CloudStorage/Box-Box/Research/NTTResearch/OPO_codes/data1.npz'
-np.savez(fname,dv=dv,da=da,kmax1=kmax1,kmax2=kmax2,kmax3=kmax3,s1=s1,s2=s2,s3=s3,s1p=s1p,s2p=s2p,s3p=s3p,xs=xs,ps=ps,ts=ts,dx=dx,dp=dp,dt=dt,alist=alist,i_seed=i_seed,padmatrix=padmatrix,num_epochs=num_epochs,step_size=step_size,params=params)
+fname='/Users/t_karmakar/Library/CloudStorage/Box-Box/Research/NTTResearch/OPO_codes/data1'
+np.savez(fname+'.npz',dv=dv,da=da,kmax1=kmax1,kmax2=kmax2,kmax3=kmax3,s1=s1,s2=s2,s3=s3,s1p=s1p,s2p=s2p,s3p=s3p,xs=xs,ps=ps,ts=ts,dx=dx,dp=dp,dt=dt,alist=alist,i_seed=i_seed,padmatrix=padmatrix,num_epochs=num_epochs,step_size=step_size)
+with open(fname+'.pickle','wb') as file:
+    pickle.dump(params,file)
+
 #_=outfile.seek(0)
 

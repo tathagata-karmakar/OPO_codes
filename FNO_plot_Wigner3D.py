@@ -24,3 +24,8 @@ rc('text',usetex=True)
 from jaxopt import OptaxSolver
 import optax
 from matplotlib import colors
+
+fname='/Users/t_karmakar/Library/CloudStorage/Box-Box/Research/NTTResearch/OPO_codes/data1.npz'
+npzfile=np.load(fname)
+params=npzfile['params']
+
