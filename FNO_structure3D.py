@@ -43,9 +43,9 @@ from FNO_structure_jax import *
 #s1 x s2 x s3 x .. x sd = n
 
 
+
 def GWigner(x,p):
     return jnp.exp(-x**2-p**2)/jnp.pi
-
 
 '''
 Initialization
@@ -57,7 +57,6 @@ def Fourier_initial3D(k1,k2,k3,dv1,key,scale=1e-2):
     #initialize Fourier layer parameters
     kappa_key,w_key=random.split(key)
     return scale*random.normal(w_key,(dv1,dv1)), scale*(random.normal(kappa_key,(k1,k2,k3,dv1,dv1))+1j*random.normal(kappa_key,(k1,k2,k3,dv1,dv1)))
-
 
 '''For 3d Domain -----'''
 def init_params3D(k1,k2,k3,da1,dv1,key,scale=1e0):
@@ -74,7 +73,6 @@ def init_params3D(k1,k2,k3,da1,dv1,key,scale=1e0):
 Neural operator evaluation
 '''
 
-
 def FastFT3D(vt1):#Fast Fourier transform
 #vt1 is of dimensions s1 x s2 x s3 x ... x sd x dv
     '''For 3d Domain -----'''
@@ -87,7 +85,7 @@ def InvFastFT3D(Fvt1):#Inverse Fast Fourier transform
 #Fvt1 is of dimensions kmax1 x kmax2 x kmax3 x ... x kmaxd x dv
 
     '''For 3d Domain -----'''
-    f=jnp.fft.ifftn(Fvt1,s=(33,33,27),axes=(0,1,2))
+    f=jnp.fft.ifftn(Fvt1,s=(29,29,21),axes=(0,1,2))
     ''' ------------------'''
     return f #dimension s1 x s2 x s3 x ... x sd x dv
 
@@ -152,7 +150,7 @@ def CostF3D(u,avs1,dx1,dp1,dt1,xv1,pv1,padM):
     dudt=jnp.gradient(u,dt1,axis=2)
     u2=u*padM
     #Evolution + I.C. + Normalization
-    cf=(10.*jnp.sum((abs(dudt-xv1*dudp+pv1*dudx))*padM)*dx1*dp1*dt1+1000*jnp.sum((u2[:,:,0]-avs1[:,:,0,0])**2)*dx1*dp1)+5*jnp.sum(abs(jnp.sum(u2,axis=(0,1))*dt1-1))
+    cf=(1.*jnp.sum((abs(dudt-xv1*dudp+pv1*dudx))*padM)*dx1*dp1*dt1+1*jnp.sum((u2[:,:,0]-avs1[:,:,0,0])**2)*dx1*dp1)+1*jnp.sum(abs(jnp.sum(u2,axis=(0,1))*dt1-1))
     return cf
 
 def CostCal3D(params1,avs1,dx1,dp1,dt1,xv1,pv1,padM):
