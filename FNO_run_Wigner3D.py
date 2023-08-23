@@ -78,11 +78,14 @@ padmatrix=np.zeros((s1,s2,s3))
 #fpadmat=np.zeros((s1,s2,dv,dv))
 padmatrix[s1p:-s1p,s2p:-s2p,:-s3p]=np.ones((s1-2*s1p,s2-2*s2p,s3-s3p))
 
+
+xv1=xv*np.cos(tv)-pv*np.sin(tv)
+pv1=pv*np.cos(tv)+xv*np.sin(tv)
 for alr in alrs:
     for ali in alis:
         #print(sigmav)
         atmp=np.zeros((s1,s2,s3,da))
-        atmp[s1p:-s1p,s2p:-s2p,:-s3p,0]=GWigner(xv-alr, pv-ali)[s1p:-s1p,s2p:-s2p,:-s3p]
+        atmp[s1p:-s1p,s2p:-s2p,:-s3p,0]=GWigner(xv1-alr, pv1-ali)[s1p:-s1p,s2p:-s2p,:-s3p]
         #atmp[:-s1p,:-s2p,1]=gauss(xv,mu,sigmav)[:-s1p,:-s2p]
         alist.append(atmp)
 
