@@ -26,11 +26,11 @@ import optax
 from matplotlib import colors
 import pickle
 
-fname='/Users/t_karmakar/Library/CloudStorage/Box-Box/Research/NTTResearch/OPO_codes/Data/data2'
+fname='/Users/t_karmakar/Library/CloudStorage/Box-Box/Research/NTTResearch/OPO_codes/Data/data4'
 npzfile=np.load(fname+'.npz')
 with open(fname+'.pickle','rb') as file:
     params=pickle.load(file)
-    
+paramsf=params_toAdam(params) 
 dv=int(npzfile['dv'])
 s1=int(npzfile['s1'])
 s2=int(npzfile['s2'])
@@ -44,9 +44,8 @@ ts=npzfile['ts']
 padmatrix=npzfile['padmatrix']
 xv,pv,tv=np.meshgrid(xs,ps,ts,indexing='ij')
 alist=npzfile['alist']
-tempindex=680
-tind=8
-
+tempindex=580
+tind=5
 
 
 u=OutputNN3D(params,alist[tempindex])

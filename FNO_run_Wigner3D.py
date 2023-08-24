@@ -28,7 +28,7 @@ from matplotlib import colors
 import pickle
 
 
-dv=4
+dv=3
 da=1
 kmax=6
 kmax1=kmax
@@ -77,7 +77,8 @@ alist=[]
 padmatrix=np.zeros((s1,s2,s3))
 #fpadmat=np.zeros((s1,s2,dv,dv))
 padmatrix[s1p:-s1p,s2p:-s2p,:-s3p]=np.ones((s1-2*s1p,s2-2*s2p,s3-s3p))
-
+padt=np.zeros(s3)
+padt[:-s3p]=np.ones(s3-s3p)
 
 xv1=xv*np.cos(tv)-pv*np.sin(tv)
 pv1=pv*np.cos(tv)+xv*np.sin(tv)
@@ -92,7 +93,7 @@ for alr in alrs:
 alist=jnp.array(alist)
 
 tstart=time.time()
-cost=TotalCost3D(params,alist,dx,dp,dt,xv,pv,padmatrix)
+cost=TotalCost3D(params,alist,dx,dp,dt,xv,pv,padmatrix,padt)
 
 tfinish=time.time()
 trun=tfinish-tstart
@@ -109,7 +110,7 @@ tempindex=250
 opt=optax.adam(step_size)
 stime=time.time()
 solver=OptaxSolver(opt=opt, fun=TotalCostAdam3D,maxiter=num_epochs,tol=1e-4)
-res=solver.run(paramsA,alist,dx,dp,dt,xv,pv,padmatrix)
+res=solver.run(paramsA,alist,dx,dp,dt,xv,pv,padmatrix,padt)
 ftime=time.time()
 print("Adam time :", ftime-stime)
 paramsf,state=res
@@ -131,9 +132,9 @@ for epoch in  range(num_epochs):
      #  step_size=10.*l0
     #elif (epoch>400):
      #  step_size=1e4*l0
-    params=update3D(params,alist,dx,dp,dt,xv,pv,step_size,padmatrix)
+    params=update3D(params,alist,dx,dp,dt,xv,pv,step_size,padmatrix,padt)
     epoch_time=time.time()-stime
-    train_acc = TotalCost3D(params,alist,dx,dp,dt,xv,pv,padmatrix)
+    train_acc = TotalCost3D(params,alist,dx,dp,dt,xv,pv,padmatrix,padt)
     #costlist[epoch]=train_acc
     print("Epoch {} in {:0.2f} sec".format(epoch, epoch_time))
     print("Total cost {}".format(train_acc))
@@ -174,7 +175,7 @@ print(i_seed)
 
 #outfile=TemporaryFile()
 fname='/Users/t_karmakar/Library/CloudStorage/Box-Box/Research/NTTResearch/OPO_codes/Data/data1'
-np.savez(fname+'.npz',dv=dv,da=da,kmax1=kmax1,kmax2=kmax2,kmax3=kmax3,s1=s1,s2=s2,s3=s3,s1p=s1p,s2p=s2p,s3p=s3p,xs=xs,ps=ps,ts=ts,dx=dx,dp=dp,dt=dt,alist=alist,i_seed=i_seed,padmatrix=padmatrix,num_epochs=num_epochs,step_size=step_size)
+np.savez(fname+'.npz',dv=dv,da=da,kmax1=kmax1,kmax2=kmax2,kmax3=kmax3,s1=s1,s2=s2,s3=s3,s1p=s1p,s2p=s2p,s3p=s3p,xs=xs,ps=ps,ts=ts,dx=dx,dp=dp,dt=dt,alist=alist,i_seed=i_seed,padmatrix=padmatrix,padt=padt,num_epochs=num_epochs,step_size=step_size)
 with open(fname+'.pickle','wb') as file:
     pickle.dump(params,file)
 

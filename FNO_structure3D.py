@@ -44,6 +44,7 @@ from FNO_structure_jax import *
 
 
 
+
 def GWigner(x,p):
     return jnp.exp(-x**2-p**2)/jnp.pi
 
@@ -136,46 +137,45 @@ def OutputNNAdam3D(params1,avs1): #NO output given adam input
         vt=FourierLayerAdam3D(vt,w,Rphir,Rphii)
     w_last,b_last=params1[-1]
     u=ProjectNN(vt,w_last,b_last)
-    return u   
+    return u
 
 '''
 Cost function calculation
 '''
 
 '''For 3d Domain -----'''
-def CostF3D(u,avs1,dx1,dp1,dt1,xv1,pv1,padM):
+def CostF3D(u,avs1,dx1,dp1,dt1,xv1,pv1,padM,padT):
     ''' ------------------'''
     dudx=jnp.gradient(u,dx1,axis=0)
     dudp=jnp.gradient(u,dp1,axis=1)
     dudt=jnp.gradient(u,dt1,axis=2)
-    u2=u*padM
     #Evolution + I.C. + Normalization
-    cf=(1.*jnp.sum((abs(dudt-xv1*dudp+pv1*dudx))*padM)*dx1*dp1*dt1+1*jnp.sum((u2[:,:,0]-avs1[:,:,0,0])**2)*dx1*dp1)+1*jnp.sum(abs(jnp.sum(u2,axis=(0,1))*dx1*dp1-1)*dt1)
+    cf=1*jnp.sum((abs(dudt-xv1*dudp+pv1*dudx))*padM)*dx1*dp1*dt1+1*jnp.sum(abs(u[:,:,0]-avs1[:,:,0,0])*padM[:,:,0])*dx1*dp1+1*jnp.sum(abs(jnp.sum(u,axis=(0,1))*dx1*dp1-1)*padT)
     return cf
 
-def CostCal3D(params1,avs1,dx1,dp1,dt1,xv1,pv1,padM):
+def CostCal3D(params1,avs1,dx1,dp1,dt1,xv1,pv1,padM,padT):
     u=OutputNN3D(params1, avs1)
-    cost=CostF3D(u,avs1,dx1,dp1,dt1,xv1,pv1,padM)
+    cost=CostF3D(u,avs1,dx1,dp1,dt1,xv1,pv1,padM,padT)
     return cost
-batch_cost3D=vmap(CostCal3D,in_axes=[None,0,None,None,None,None,None,None])
+batch_cost3D=vmap(CostCal3D,in_axes=[None,0,None,None,None,None,None,None,None])
 
-def TotalCost3D(params1,avlist,dx1,dp1,dt1,xv1,pv1,padM):
-    costs=batch_cost3D(params1,avlist,dx1,dp1,dt1,xv1,pv1,padM)
+def TotalCost3D(params1,avlist,dx1,dp1,dt1,xv1,pv1,padM,padT):
+    costs=batch_cost3D(params1,avlist,dx1,dp1,dt1,xv1,pv1,padM,padT)
     return jnp.sum(costs)/len(avlist)
 
-def CostCalAdam3D(params1,avs1,dx1,dp1,dt1,xv1,pv1,padM):
+def CostCalAdam3D(params1,avs1,dx1,dp1,dt1,xv1,pv1,padM,padT):
     u=OutputNNAdam3D(params1, avs1)
-    cost=CostF3D(u,avs1,dx1,dp1,dt1,xv1,pv1,padM)
+    cost=CostF3D(u,avs1,dx1,dp1,dt1,xv1,pv1,padM,padT)
     return cost
-batch_costAdam3D=vmap(CostCalAdam3D,in_axes=[None,0,None,None,None,None,None,None])
+batch_costAdam3D=vmap(CostCalAdam3D,in_axes=[None,0,None,None,None,None,None,None,None])
 
-def TotalCostAdam3D(params1,avlist,dx1,dp1,dt1,xv1,pv1,padM):
-    costs=batch_costAdam3D(params1,avlist,dx1,dp1,dt1,xv1,pv1,padM)
+def TotalCostAdam3D(params1,avlist,dx1,dp1,dt1,xv1,pv1,padM,padT):
+    costs=batch_costAdam3D(params1,avlist,dx1,dp1,dt1,xv1,pv1,padM,padT)
     return jnp.sum(costs)/len(avlist)
 
 @jit
-def update3D(params1,alist1,dx1,dp1,dt1,xv1,pv1,step_size,padM):
-    grads=grad(TotalCost3D)(params1,alist1,dx1,dp1,dt1,xv1,pv1,padM)
+def update3D(params1,alist1,dx1,dp1,dt1,xv1,pv1,step_size,padM,padT):
+    grads=grad(TotalCost3D)(params1,alist1,dx1,dp1,dt1,xv1,pv1,padM,padT)
     return [(w - step_size * dw, b - step_size * db)
           for (w, b), (dw, db) in zip(params1, grads)]
 
