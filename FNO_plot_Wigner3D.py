@@ -41,22 +41,23 @@ s3p=int(npzfile['s3p'])
 xs=npzfile['xs']
 ps=npzfile['ps']
 ts=npzfile['ts']
+padmatrix=npzfile['padmatrix']
 xv,pv,tv=np.meshgrid(xs,ps,ts,indexing='ij')
 alist=npzfile['alist']
-tempindex=500
-tind=0
+tempindex=680
+tind=8
 
 
 
 u=OutputNN3D(params,alist[tempindex])
 u1=alist[tempindex][:,:,:,0]
 
-fig, axs = plt.subplots(2,1,sharex='all')
+fig, axs = plt.subplots(2,1,figsize=(9,9),sharex='all')
 lwd=3
 
 maxu=np.max(u[s1p:-s1p,s2p:-s2p,tind])
 minu=np.min(u[s1p:-s1p,s2p:-s2p,tind])
-divnorm=colors.TwoSlopeNorm(vmin=minu, vcenter=(maxu+minu)/2, vmax=maxu)
+divnorm=colors.TwoSlopeNorm(vmin=minu, vcenter=(minu+maxu)/2, vmax=maxu)
 
 im1=axs[0].contourf(xv[s1p:-s1p,s2p:-s2p,tind],pv[s1p:-s1p,s2p:-s2p,tind],u[s1p:-s1p,s2p:-s2p,tind],levels=8,cmap='RdBu', norm=divnorm)
 cb1=plt.colorbar(im1,ax=axs[0])
@@ -64,7 +65,7 @@ cb1.ax.tick_params(labelsize=12)
 
 maxu1=np.max(u1[s1p:-s1p,s2p:-s2p,tind])
 minu1=np.min(u1[s1p:-s1p,s2p:-s2p,tind])
-divnorm=colors.TwoSlopeNorm(vmin=minu1, vcenter=(maxu1+minu1)/2, vmax=maxu1)
+divnorm=colors.TwoSlopeNorm(vmin=minu1, vcenter=(minu1+maxu1)/2, vmax=maxu1)
 im2=axs[1].contourf(xv[s1p:-s1p,s2p:-s2p,tind],pv[s1p:-s1p,s2p:-s2p,tind],u1[s1p:-s1p,s2p:-s2p,tind],levels=10,cmap='RdBu', norm=divnorm)
 cb2=plt.colorbar(im2,ax=axs[1])
 cb2.ax.tick_params(labelsize=12)
@@ -75,6 +76,7 @@ axs[1].set_xlabel('$x$',fontsize=20)
 axs[0].set_ylabel('$p$',fontsize=20)
 axs[0].yaxis.set_label_coords(-.15, -.15)
 #axs[0].legend(loc=1,fontsize=15)
-
+axs[0].set_box_aspect(1)
+axs[1].set_box_aspect(1)
 plt.subplots_adjust(wspace=0.05, hspace=0.1)
 #fig.savefig('/Users/t_karmakar/Library/CloudStorage/Box-Box/Research/NTTResearch/Plots/Wigner3D.png',bbox_inches='tight')
