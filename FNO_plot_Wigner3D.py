@@ -42,10 +42,11 @@ xs=npzfile['xs']
 ps=npzfile['ps']
 ts=npzfile['ts']
 padmatrix=npzfile['padmatrix']
+#padt=npzfile['padt']
 xv,pv,tv=np.meshgrid(xs,ps,ts,indexing='ij')
 alist=npzfile['alist']
-tempindex=580
-tind=5
+tempindex=880
+tind=0
 
 
 u=OutputNN3D(params,alist[tempindex])
