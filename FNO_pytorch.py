@@ -133,7 +133,7 @@ def trainingloop(model, alist, costf, optimizer):
     
         
 
-dv=6
+dv=32
 da=2
 kmax=6
 kmax1=kmax
@@ -152,12 +152,12 @@ xf=2
 ti=0
 tf=1
 
-xs_temp=torch.linspace(xi,xf,s1-s1p)
-ts_temp=torch.linspace(ti,tf,s2-s2p)
+xs_temp=torch.linspace(xi,xf,s1-s1p,device = device)
+ts_temp=torch.linspace(ti,tf,s2-s2p,device = device)
 dx=xs_temp[1]-xs_temp[0]
 dt=ts_temp[1]-ts_temp[0]
-ts=torch.linspace(ti,ti+dt*(s2-1),s2)
-xs=torch.linspace(xi,xi+dx*(s1-1),s1)
+ts=torch.linspace(ti,ti+dt*(s2-1),s2,device = device)
+xs=torch.linspace(xi,xi+dx*(s1-1),s1,device = device)
 xv,tv=torch.meshgrid(xs,ts,indexing='ij')
 
 Na=5
@@ -165,9 +165,9 @@ Ns=300
 avs=torch.linspace(0.01,1,Na)
 mu=0.5
 sigmas=torch.linspace(0.08,1,Ns)
-alist=torch.zeros((Na*Ns,s1,s2,da))
+alist=torch.zeros((Na*Ns,s1,s2,da),device = device)
 
-padmatrix=torch.zeros((s1,s2))
+padmatrix=torch.zeros((s1,s2),device = device)
 fpadmat=torch.zeros((s1,s2,dv,dv))
 padmatrix[:-s1p,:-s2p]=torch.ones((s1-s1p,s2-s2p))
 fpadmat[:kmax,:kmax,:,:]=torch.ones((kmax,kmax,dv,dv))
@@ -187,22 +187,47 @@ total_params = sum(p.numel() for p in model.parameters())
 print(model)
         
 X = torch.rand(s1,s2, 2, device=device)
-logits = torch.vmap(model)(alist)
+#logits = torch.vmap(model)(alist)
 
-costf = TotalCost(xs, ts, dx,dt,padmatrix)
-costv = costf(logits,alist)
+costf = TotalCost(xs, ts, dx,dt,padmatrix).to(device)
+##costv = costf(logits,alist)
 
 optimizer = torch.optim.Adam(model.parameters(),lr = 0.001)
 
-epochs = 10
+epochs = 3
 
 for t in range(epochs):
     stime = time.time()
     trainingloop(model, alist, costf, optimizer)
     dtime = time.time()-stime
-    
     print (dtime)
 
+fig, axs = plt.subplots(2,1,sharex='all')
+
+tempindex=250
+
+model.eval()
+
+u = model(alist[tempindex])
+
+xsnp = xs.numpy()
+unp = u.detach().numpy()
+avalnp = alist[tempindex].numpy()
+
+lwd=3
+
+axs[0].plot(xsnp[:-s1p],unp[:-s1p,0],'r',label='$u(t=0)$',linewidth=lwd)
+axs[0].plot(xsnp[:-s1p],unp[:-s1p,-s2p-1],'b--',label='$u(t=1)$',linewidth=lwd)
+axs[0].plot(xsnp[:-s1p],avalnp[:-s1p,0,1],'g',label='Initial',linewidth=lwd)
+
+axs[1].tick_params(labelsize=18)
+axs[0].tick_params(labelsize=18)
+axs[1].set_xlabel('$x$',fontsize=20)
+axs[0].set_ylabel('$u$',fontsize=20)
+axs[0].yaxis.set_label_coords(-.15, -.15)
+axs[0].legend(loc=1,fontsize=15)
+plt.subplots_adjust(wspace=0.05, hspace=0.1)
+#fig.savefig('Transport_colab3.png',bbox_inches='tight')
 
 #var1=torch.linspace(0,1,100)
 #var2=torch.linspace(10,30,300)
